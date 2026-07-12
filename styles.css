@@ -302,14 +302,16 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   perspective: 1400px;       /* a "distância do olho" até o palco */
   transform-style: preserve-3d;
   overflow: visible;         /* o vidro precisa poder sair da caixa */
-  cursor: grab;
 
   /* Deixa o navegador cuidar da rolagem vertical e me dá o eixo X.
-     Sem isso, o deslize horizontal sequestraria também o scroll da
+     Sem isso, o deslize com o dedo sequestraria também o scroll da
      página no celular — a pessoa não conseguiria descer o site. */
   touch-action: pan-y;
 }
 
+/* Só no toque existe arrasto. No desktop quem move é o cursor
+   pairando, então não há nada pra "agarrar" — mostrar a mãozinha
+   ali seria mentir sobre o que o clique faz. */
 .trilho.deslizando {
   cursor: grabbing;
   user-select: none;
@@ -342,7 +344,7 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
      relação ao cursor. Quem suaviza aqui é o easing do JS. */
   transition: opacity 0.3s ease, box-shadow 0.4s ease;
 
-  cursor: pointer;
+  cursor: default;
   display: flex;
   flex-direction: column;
   overflow: hidden;

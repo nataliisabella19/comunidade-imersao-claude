@@ -85,14 +85,56 @@
     requestAnimationFrame(tique);
   }
 
-  /* ---------- Deslizar (mouse e dedo) ---------- */
+  /* ==========================================================
+     O CURSOR COMANDA (sem clicar, sem segurar)
+
+     Mapeamento direto: a posição do mouse ao longo do palco É a
+     posição na coleção. Mouse na borda esquerda = primeiro card;
+     na borda direita = último.
+
+     Escolhi assim de propósito. A versão anterior somava um
+     deslocamento a partir do meio, o que deixava o alvo ESTOURAR
+     as pontas (ir além do último card) — e era daí que vinha a
+     bugada. Com o mapeamento direto, o fim da faixa é o fim da
+     coleção: não existe "além".
+     ========================================================== */
+  const temHover = window.matchMedia("(hover: hover)").matches;
+
+  if (temHover && !reduzir) {
+    const palco = trilho.parentElement || trilho;
+
+    palco.addEventListener("pointermove", (e) => {
+      const r = trilho.getBoundingClientRect();
+
+      // Uma margem morta nas laterais: sem ela, seria impossível
+      // parar no primeiro ou no último card — bastaria um pixel de
+      // sobra pra escapar da ponta.
+      const margem = r.width * 0.12;
+      const util = r.width - margem * 2;
+      const bruto = (e.clientX - r.left - margem) / util;   // 0 .. 1
+
+      alvo = limitar(bruto * (n - 1));
+      animar();
+    }, { passive: true });
+
+    // Cursor saiu: encaixa no card mais próximo em vez de largar a
+    // fita num meio-termo torto, com dois cards pela metade.
+    palco.addEventListener("pointerleave", () => {
+      alvo = limitar(Math.round(atual));
+      animar();
+    }, { passive: true });
+  }
+
+  /* ---------- Celular: deslizar com o dedo ----------
+     Não existe cursor pairando no toque, então lá o gesto é o
+     arrasto mesmo. */
   let arrastando = false;
   let arrastou = false;
   let x0 = 0;
   let alvo0 = 0;
 
   trilho.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
+    if (temHover || e.button !== 0) return;
     arrastando = true;
     arrastou = false;
     x0 = e.clientX;
@@ -104,8 +146,8 @@
     if (!arrastando) return;
     const dx = e.clientX - x0;
 
-    // Folga: sem ela, o tremor da mão ao clicar já contaria como
-    // arrasto e cancelaria o clique no card.
+    // Folga: sem ela, o tremor do dedo ao tocar já contaria como
+    // arrasto e cancelaria o toque no card.
     if (!arrastou && Math.abs(dx) < LIMIAR) return;
 
     if (!arrastou) {
@@ -113,7 +155,6 @@
       trilho.setPointerCapture(e.pointerId);
     }
 
-    // Puxar pra esquerda avança (o card da direita vem pro centro).
     alvo = limitar(alvo0 - dx / PX_POR_CARD);
     animar();
   });
@@ -122,9 +163,6 @@
     if (!arrastando) return;
     arrastando = false;
     trilho.classList.remove("deslizando");
-
-    // Encaixa no card mais próximo, senão a fita fica parada num
-    // meio-termo torto, com dois cards pela metade.
     alvo = limitar(Math.round(atual));
     animar();
   }
@@ -132,14 +170,15 @@
   trilho.addEventListener("pointerup", soltar);
   trilho.addEventListener("pointercancel", soltar);
 
-  /* Clicar num card lateral também traz ele pro centro. */
+  /* Tocar num card lateral traz ele pro centro (celular). */
   cards.forEach((card, i) => {
     card.addEventListener("click", (e) => {
-      if (arrastou) {              // foi deslize, não clique
+      if (arrastou) {              // foi deslize, não toque
         e.preventDefault();
         return;
       }
-      if (Math.abs(distancia(i)) < 0.5) return;  // o do centro abre o conteúdo
+      if (temHover) return;        // no desktop quem manda é o cursor
+      if (Math.abs(distancia(i)) < 0.5) return;
       alvo = limitar(i);
       animar();
     });
