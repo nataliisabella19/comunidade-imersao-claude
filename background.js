@@ -107,58 +107,151 @@
     cy = alt / 2;
   }
 
-  const proj = new Array(pontos.length);
+  /* ==========================================================
+     INTERAÇÃO COM O CURSOR
+     ========================================================== */
+
+  const RAIO_CAMPO = 190;  // alcance da influência do mouse, em px
+  const FORCA_EMPURRAO = 26; // quanto o nó é afastado, em px
+  const SUAVIDADE = 0.055; // 0 = não segue; 1 = gruda no cursor
+
+  // Alvo (pra onde o mouse quer levar) e atual (onde de fato está).
+  // A diferença entre os dois é o que cria a sensação de peso/inércia.
+  let alvoY = 0, alvoX = 0;
+  let atualY = 0, atualX = 0;
+
+  // Posição do cursor na tela. -1 = fora da tela (desliga o campo).
+  let mx = -1, my = -1;
+  let temCursor = false;
+
+  function moverCursor(px, py) {
+    mx = px;
+    my = py;
+    temCursor = true;
+
+    // Normaliza pra -1..1 a partir do centro da tela
+    const nx = (px / larg) * 2 - 1;
+    const ny = (py / alt) * 2 - 1;
+
+    alvoY = nx * AMPLITUDE_Y;
+    alvoX = -ny * AMPLITUDE_X;
+  }
+
+  if (!reduzirMovimento) {
+    window.addEventListener("pointermove", (e) => moverCursor(e.clientX, e.clientY), { passive: true });
+
+    // Cursor saiu da janela: o campo desliga e o asterisco
+    // volta suavemente pro giro ocioso.
+    window.addEventListener("pointerleave", () => {
+      temCursor = false;
+      mx = my = -1;
+    }, { passive: true });
+  }
+
+  /* ---------- Loop de render ---------- */
+  const projX = new Float32Array(pontos.length);
+  const projY = new Float32Array(pontos.length);
+  const projP = new Float32Array(pontos.length);
+  const projG = new Float32Array(pontos.length); // 0..1 — quão "aceso" pelo cursor
+
+  const r2Campo = RAIO_CAMPO * RAIO_CAMPO;
 
   function desenhar(tempo) {
     const t = reduzirMovimento ? 0 : tempo * 0.00013;
-    const angY = Math.sin(t) * AMPLITUDE_Y;
-    const angX = Math.sin(t * 0.7) * AMPLITUDE_X;
 
-    const cosY = Math.cos(angY), sinY = Math.sin(angY);
-    const cosX = Math.cos(angX), sinX = Math.sin(angX);
+    // Sem cursor, o asterisco respira sozinho. Com cursor, o mouse
+    // manda — mas a transição entre os dois é contínua, então não
+    // existe "solavanco" quando o mouse entra ou sai da tela.
+    if (!temCursor) {
+      alvoY = Math.sin(t) * AMPLITUDE_Y;
+      alvoX = Math.sin(t * 0.7) * AMPLITUDE_X;
+    }
+
+    // Easing: persegue o alvo em vez de saltar até ele.
+    atualY += (alvoY - atualY) * SUAVIDADE;
+    atualX += (alvoX - atualX) * SUAVIDADE;
+
+    const cosY = Math.cos(atualY), sinY = Math.sin(atualY);
+    const cosX = Math.cos(atualX), sinX = Math.sin(atualX);
 
     ctx.clearRect(0, 0, larg, alt);
 
-    // Projeta todos os pontos
+    // --- Projeta, aplica repulsão e calcula o brilho ---
     for (let i = 0; i < pontos.length; i++) {
       const p = pontos[i];
 
-      // rotação em Y, depois em X
       const x1 = p.x * cosY + p.z * sinY;
       const z1 = -p.x * sinY + p.z * cosY;
       const y2 = p.y * cosX - z1 * sinX;
       const z2 = p.y * sinX + z1 * cosX;
 
-      // perspectiva
       const persp = 2.6 / (2.6 - z2);
-      proj[i] = {
-        x: cx + x1 * escala * persp,
-        y: cy + y2 * escala * persp,
-        p: persp,
-      };
+      let sx = cx + x1 * escala * persp;
+      let sy = cy + y2 * escala * persp;
+      let brilho = 0;
+
+      if (temCursor) {
+        const dx = sx - mx;
+        const dy = sy - my;
+        const d2p = dx * dx + dy * dy;
+
+        if (d2p < r2Campo && d2p > 0.01) {
+          const d = Math.sqrt(d2p);
+          // Queda suave: 1 no cursor, 0 na borda do campo.
+          const f = 1 - d / RAIO_CAMPO;
+          const suave = f * f;
+
+          // Empurra o nó pra longe do cursor, na direção radial.
+          sx += (dx / d) * FORCA_EMPURRAO * suave;
+          sy += (dy / d) * FORCA_EMPURRAO * suave;
+          brilho = suave;
+        }
+      }
+
+      projX[i] = sx;
+      projY[i] = sy;
+      projP[i] = persp;
+      projG[i] = brilho;
     }
 
-    // Conexões primeiro (ficam atrás dos nós)
+    // --- Conexões: duas passadas ---
+    // Passada 1: a malha inteira, bem fraquinha.
     ctx.lineWidth = 0.6;
+    ctx.strokeStyle = "rgba(255,255,255,0.055)";
     ctx.beginPath();
     for (let k = 0; k < conexoes.length; k++) {
-      const a = proj[conexoes[k][0]];
-      const b = proj[conexoes[k][1]];
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
+      const a = conexoes[k][0], b = conexoes[k][1];
+      ctx.moveTo(projX[a], projY[a]);
+      ctx.lineTo(projX[b], projY[b]);
     }
-    ctx.strokeStyle = "rgba(255,255,255,0.055)";
     ctx.stroke();
 
-    // Nós — quem está mais perto da câmera fica maior e mais claro
-    for (let i = 0; i < proj.length; i++) {
-      const q = proj[i];
-      const prox = (q.p - 0.85) / 0.6;          // ~0 (fundo) a ~1 (frente)
-      const raio = 1.1 + Math.max(0, prox) * 1.9;
-      const alpha = 0.28 + Math.max(0, Math.min(1, prox)) * 0.55;
+    // Passada 2: só o que está sob o cursor, aceso por cima.
+    // É o que dá a leitura de "sinapse disparando".
+    if (temCursor) {
+      ctx.lineWidth = 0.85;
+      for (let k = 0; k < conexoes.length; k++) {
+        const a = conexoes[k][0], b = conexoes[k][1];
+        const g = Math.max(projG[a], projG[b]);
+        if (g < 0.02) continue;
+        ctx.strokeStyle = `rgba(255,255,255,${0.055 + g * 0.4})`;
+        ctx.beginPath();
+        ctx.moveTo(projX[a], projY[a]);
+        ctx.lineTo(projX[b], projY[b]);
+        ctx.stroke();
+      }
+    }
+
+    // --- Nós: profundidade + brilho do cursor ---
+    for (let i = 0; i < pontos.length; i++) {
+      const prox = Math.max(0, Math.min(1, (projP[i] - 0.85) / 0.6));
+      const g = projG[i];
+
+      const raio = 1.1 + prox * 1.9 + g * 2.2;
+      const alpha = Math.min(1, 0.28 + prox * 0.55 + g * 0.5);
 
       ctx.beginPath();
-      ctx.arc(q.x, q.y, raio, 0, Math.PI * 2);
+      ctx.arc(projX[i], projY[i], raio, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255,255,255,${alpha})`;
       ctx.fill();
     }
