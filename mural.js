@@ -9,24 +9,36 @@
 
    ========================================================== */
 
-/* ---------------- Carrossel 3D (coverflow) ---------------- */
+/* ---------------- Carrossel 3D guiado pelo cursor ----------------
+   O "centro" do carrossel é um número CONTÍNUO, não um índice.
+   Quando ele vale 2.4, o carrossel está parado entre o card 2 e o
+   card 3 — e é isso que permite os cards girarem suavemente junto
+   com o cursor, em vez de saltarem de um pra outro.
+   ---------------------------------------------------------------- */
 (function () {
   const trilho = document.getElementById("trilho");
   if (!trilho) return;
 
+  const palco = trilho.parentElement || trilho;   // área que capta o cursor
   const cards = Array.from(trilho.children);
   const n = cards.length;
   if (!n) return;
 
-  const VISIVEIS = 2;              // quantos cards aparecem de cada lado
-  let ativo = Math.floor(n / 2);   // começa com um card do meio em foco
+  const VISIVEIS = 2;      // quantos cards aparecem de cada lado
+  const ALCANCE = n * 0.5; // quantos cards uma varrida da tela percorre
+  const EASING = 0.085;    // 0 = não segue; 1 = gruda no cursor
 
-  /* Distância circular até o card ativo, COM SINAL.
-     Ex.: com 6 cards e o ativo = 0, o card 5 tem distância -1
-     (ele está logo à esquerda), não +5. É isso que faz o
-     carrossel dar a volta em vez de bater na ponta. */
+  const reduzir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let alvo = Math.floor(n / 2);   // pra onde o cursor quer levar
+  let atual = alvo;               // onde de fato está (persegue o alvo)
+
+  /* Distância circular até o centro, COM SINAL e fracionária.
+     Ex.: com 6 cards e centro = 0, o card 5 fica a -1 (logo à
+     esquerda), não a +5. É isso que faz o carrossel dar a volta
+     em vez de bater na ponta. */
   function distancia(i) {
-    let d = (((i - ativo) % n) + n) % n;   // 0 .. n-1
+    let d = (((i - atual) % n) + n) % n;   // 0 .. n-1
     if (d > n / 2) d -= n;                 // -n/2 .. n/2
     return d;
   }
@@ -34,36 +46,64 @@
   function render() {
     cards.forEach((card, i) => {
       const d = distancia(i);
+      const dist = Math.abs(d);
+
       // O CSS resolve toda a geometria a partir de --pos.
-      card.style.setProperty("--pos", d);
-      card.dataset.ativo = d === 0 ? "1" : "0";
-      card.dataset.longe = Math.abs(d) > VISIVEIS ? "1" : "0";
-      // Card de trás não deve ser alcançável pelo Tab
-      card.setAttribute("aria-hidden", d === 0 ? "false" : "true");
+      card.style.setProperty("--pos", d.toFixed(3));
+
+      // "Ativo" é quem está mais perto do centro — com centro
+      // fracionário, ninguém fica exatamente em zero.
+      const ehCentro = dist < 0.5;
+      card.dataset.ativo = ehCentro ? "1" : "0";
+      card.dataset.longe = dist > VISIVEIS + 0.5 ? "1" : "0";
+      card.setAttribute("aria-hidden", ehCentro ? "false" : "true");
     });
   }
 
-  function irPara(i) {
-    ativo = ((i % n) + n) % n;
+  /* ---------- Loop de animação ----------
+     `alvo` é sempre a única fonte da verdade. Quem muda o alvo é o
+     cursor, o clique ou o teclado — o loop só persegue. */
+  function tique() {
+    atual += (alvo - atual) * EASING;
+
+    // Trava ao chegar perto, senão o resto decimal faz o loop
+    // recalcular pra sempre sem nada mudar na tela.
+    if (Math.abs(alvo - atual) < 0.001) atual = alvo;
+
     render();
+    requestAnimationFrame(tique);
   }
 
+  /* ---------- O cursor comanda ---------- */
+  palco.addEventListener("pointermove", (e) => {
+    if (reduzir) return;
+    const r = palco.getBoundingClientRect();
+    const nx = (e.clientX - r.left) / r.width - 0.5;   // -0.5 (esq) .. +0.5 (dir)
+    alvo = Math.floor(n / 2) + nx * 2 * ALCANCE;
+  }, { passive: true });
+
+  // Cursor saiu: encaixa no card mais próximo, em vez de largar o
+  // carrossel congelado num meio-termo torto entre dois cards.
+  palco.addEventListener("pointerleave", () => {
+    alvo = Math.round(atual);
+  }, { passive: true });
+
+  /* Clicar num card lateral traz ele pro centro — é o caminho do
+     celular, onde não existe cursor pairando. */
   cards.forEach((card, i) => {
     card.addEventListener("click", () => {
-      // Clicar num card lateral traz ele pro centro. Clicar no
-      // card do centro é que deve abrir o conteúdo (quando houver
-      // link) — por isso o centro não re-renderiza aqui.
-      if (distancia(i) !== 0) irPara(i);
+      if (Math.abs(distancia(i)) < 0.5) return;  // o do centro abre o conteúdo
+      alvo = atual + distancia(i);
     });
   });
 
-  // Setas do teclado navegam o carrossel
   window.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") irPara(ativo + 1);
-    else if (e.key === "ArrowLeft") irPara(ativo - 1);
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    alvo = Math.round(atual) + (e.key === "ArrowRight" ? 1 : -1);
   });
 
   render();
+  if (!reduzir) requestAnimationFrame(tique);
 })();
 
 /* ---------------- Mural ---------------- */

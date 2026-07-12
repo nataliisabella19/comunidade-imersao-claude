@@ -325,10 +325,11 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   opacity: calc(1 - var(--dist) * 0.28);
   z-index: calc(10 - var(--dist));
 
-  transition:
-    transform 0.62s cubic-bezier(0.22, 0.8, 0.28, 1),
-    opacity 0.62s ease,
-    box-shadow 0.4s ease;
+  /* Sem transição no transform, de propósito. O JS reposiciona os
+     cards a cada frame; se o CSS também estivesse animando, as duas
+     suavizações se somariam e o card ficaria mole, arrastado em
+     relação ao cursor. Quem suaviza aqui é o easing do JS. */
+  transition: opacity 0.3s ease, box-shadow 0.4s ease;
 
   cursor: pointer;
   display: flex;
