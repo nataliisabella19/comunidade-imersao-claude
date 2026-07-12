@@ -288,44 +288,75 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   gap: 20px;
 }
 
-.trilho {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-
-  /* overflow-x: auto força o eixo Y a recortar. Sem esse respiro,
-     a sombra projetada do card e o levantar do hover seriam
-     decapitados pela borda da faixa. */
-  padding: 16px 4px 54px;
-  margin: -16px -4px -34px;
-}
-.trilho::-webkit-scrollbar { display: none; }
-
 /* ==========================================================
-   CARD = BLOCO DE VIDRO GROSSO (referência do print)
+   PALCO 3D — coverflow estilo Vision Pro
 
-   O que faz ele parecer um objeto sólido de vidro, e não um
-   retângulo translúcido:
-   1. Cantos MUITO arredondados (squircle), quase uma bolha.
-   2. Um bisel grosso nas quatro bordas — várias sombras internas
-      que simulam a espessura refratando a luz.
-   3. Glints quentes correndo no topo e na base, que são a luz
-      atravessando o vidro (as cáusticas do print).
-   4. Um glow difuso no miolo, como se a peça fosse iluminada
-      por dentro.
+   O card ativo fica de frente, no centro. Os vizinhos giram em
+   torno do eixo Y, encolhem e recuam em Z, criando a profundidade.
+   O JS só define --pos (a distância até o centro: 0, ±1, ±2...);
+   toda a geometria é resolvida aqui no CSS.
    ========================================================== */
+.trilho {
+  position: relative;
+  height: 460px;
+  perspective: 1400px;       /* a "distância do olho" até o palco */
+  transform-style: preserve-3d;
+  overflow: visible;         /* o vidro precisa poder sair da caixa */
+}
+
 .trilho-card {
-  flex: 0 0 320px;
-  scroll-snap-align: start;
-  border-radius: 2.5rem;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 330px;
+  height: 100%;
+
+  /* --pos vem do JS: 0 = centro, -1 = um à esquerda, 2 = dois à direita */
+  --pos: 0;
+  --dist: max(var(--pos), calc(-1 * var(--pos)));   /* |pos|, sem abs() */
+
+  transform:
+    translateX(calc(-50% + var(--pos) * 210px))
+    translateZ(calc(var(--dist) * -190px))
+    rotateY(calc(var(--pos) * -34deg))
+    scale(calc(1 - var(--dist) * 0.06));
+
+  /* Quanto mais longe do centro, mais o card apaga e recua */
+  opacity: calc(1 - var(--dist) * 0.28);
+  z-index: calc(10 - var(--dist));
+
+  transition:
+    transform 0.62s cubic-bezier(0.22, 0.8, 0.28, 1),
+    opacity 0.62s ease,
+    box-shadow 0.4s ease;
+
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
+  border-radius: 2rem;
+}
 
+/* Cards muito longe do centro saem de cena. Sem isso, eles se
+   empilham nas bordas e viram uma sujeira visual. */
+.trilho-card[data-longe="1"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Só o card do centro reage ao mouse — os laterais são alvo de
+   clique pra virem pro meio, não de leitura. */
+.trilho-card[data-ativo="1"] { cursor: default; }
+.trilho-card:not([data-ativo="1"]):hover { opacity: 0.9; }
+
+/* ==========================================================
+   APARÊNCIA DO CARD — vidro grosso
+
+   Só aparência aqui. Nada de `transform` neste bloco: a geometria
+   3D é do palco (acima), e um transform de hover aqui apagaria a
+   rotação inteira, endireitando o card ao passar o mouse.
+   ========================================================== */
+.trilho-card {
   background:
     radial-gradient(ellipse 80% 60% at 50% 62%, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0) 70%),
     linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.13) 45%, rgba(255,255,255,0.26) 100%);
@@ -345,8 +376,9 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
     /* a peça flutua sobre o fundo */
     0 26px 50px -20px rgba(120, 48, 18, 0.40);
 }
-.trilho-card:hover {
-  transform: translateY(-6px) scale(1.02);
+
+/* O card do centro é o herói: sombra mais forte, sem transparência */
+.trilho-card[data-ativo="1"] {
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,0.7),
     inset 0 4px 7px -1px rgba(255,255,255,1),
@@ -354,7 +386,7 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
     inset 14px 0 26px -16px rgba(255,255,255,1),
     inset -14px 0 26px -16px rgba(255,255,255,1),
     inset 0 0 70px rgba(255,255,255,0.3),
-    0 34px 60px -20px rgba(120, 48, 18, 0.45);
+    0 40px 70px -24px rgba(120, 48, 18, 0.50);
 }
 
 /* Glints: as cáusticas quentes do print, correndo no topo e na
@@ -689,8 +721,17 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   .split { padding: 1.75rem; }
   .secao { padding: 80px 1.5rem; }
 
-  /* Card fixo em 320px encostaria nas bordas do celular */
-  .trilho-card { flex: 0 0 78vw; }
+  /* No celular o palco encolhe: card mais estreito, vizinhos mais
+     próximos e menos girados, senão eles saem da tela. */
+  .trilho { height: 420px; perspective: 900px; }
+  .trilho-card {
+    width: min(300px, 74vw);
+    transform:
+      translateX(calc(-50% + var(--pos) * 130px))
+      translateZ(calc(var(--dist) * -150px))
+      rotateY(calc(var(--pos) * -28deg))
+      scale(calc(1 - var(--dist) * 0.08));
+  }
   .capa { height: 150px; }
 
   .nav { flex-wrap: wrap; gap: 12px; }

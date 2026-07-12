@@ -7,9 +7,64 @@
    demonstração de interface, não uma comunidade funcionando.
    Pra virar um mural de verdade, precisa de um backend.
 
-   O carrossel não tem mais JavaScript: sem as setas, ele é só
-   uma faixa com rolagem horizontal nativa (trackpad / dedo).
    ========================================================== */
+
+/* ---------------- Carrossel 3D (coverflow) ---------------- */
+(function () {
+  const trilho = document.getElementById("trilho");
+  if (!trilho) return;
+
+  const cards = Array.from(trilho.children);
+  const n = cards.length;
+  if (!n) return;
+
+  const VISIVEIS = 2;              // quantos cards aparecem de cada lado
+  let ativo = Math.floor(n / 2);   // começa com um card do meio em foco
+
+  /* Distância circular até o card ativo, COM SINAL.
+     Ex.: com 6 cards e o ativo = 0, o card 5 tem distância -1
+     (ele está logo à esquerda), não +5. É isso que faz o
+     carrossel dar a volta em vez de bater na ponta. */
+  function distancia(i) {
+    let d = (((i - ativo) % n) + n) % n;   // 0 .. n-1
+    if (d > n / 2) d -= n;                 // -n/2 .. n/2
+    return d;
+  }
+
+  function render() {
+    cards.forEach((card, i) => {
+      const d = distancia(i);
+      // O CSS resolve toda a geometria a partir de --pos.
+      card.style.setProperty("--pos", d);
+      card.dataset.ativo = d === 0 ? "1" : "0";
+      card.dataset.longe = Math.abs(d) > VISIVEIS ? "1" : "0";
+      // Card de trás não deve ser alcançável pelo Tab
+      card.setAttribute("aria-hidden", d === 0 ? "false" : "true");
+    });
+  }
+
+  function irPara(i) {
+    ativo = ((i % n) + n) % n;
+    render();
+  }
+
+  cards.forEach((card, i) => {
+    card.addEventListener("click", () => {
+      // Clicar num card lateral traz ele pro centro. Clicar no
+      // card do centro é que deve abrir o conteúdo (quando houver
+      // link) — por isso o centro não re-renderiza aqui.
+      if (distancia(i) !== 0) irPara(i);
+    });
+  });
+
+  // Setas do teclado navegam o carrossel
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") irPara(ativo + 1);
+    else if (e.key === "ArrowLeft") irPara(ativo - 1);
+  });
+
+  render();
+})();
 
 /* ---------------- Mural ---------------- */
 (function () {
