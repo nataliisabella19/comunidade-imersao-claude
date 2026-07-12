@@ -202,7 +202,6 @@ ul { list-style: none; }
 
 /* Rótulo longo: não pode espremer nem quebrar em duas linhas */
 .btn-conta { flex-shrink: 0; }
-.barra-topo .sociais { min-width: 0; }
 button.pill, a.pill { cursor: pointer; }
 button.pill:hover, a.pill:hover { transform: scale(1.05); }
 
@@ -339,13 +338,9 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 .barra-topo {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
 }
-
-.sociais { gap: 14px; padding: 7px 8px 7px 18px; }
-.sociais a { color: var(--branco); transition: color 0.2s; display: flex; }
-.sociais a:hover { color: var(--texto-80); }
 
 .card-comunidade {
   width: 14rem;
