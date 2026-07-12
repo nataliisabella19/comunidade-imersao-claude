@@ -532,6 +532,44 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 
 .compositor-linha { display: flex; align-items: flex-start; gap: 14px; }
 
+.compositor-campos { flex: 1; min-width: 0; }
+
+.compositor-nome {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--texto);
+  font: inherit;
+  font-weight: 500;
+  font-size: 0.92rem;
+  padding: 4px 0 2px;
+}
+.compositor-nome::placeholder { color: var(--texto-50); font-weight: 400; }
+
+/* Campo de link: nasce escondido e abre ao clicar no chip "Link" */
+.campo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--texto-60);
+}
+.campo-link[hidden] { display: none; }
+.campo-link input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.85rem;
+}
+.campo-link input::placeholder { color: var(--texto-50); }
+
 .compositor-campo {
   flex: 1;
   background: none;
@@ -570,6 +608,14 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   transition: transform 0.2s, color 0.2s;
 }
 .chip:hover { transform: scale(1.05); color: var(--texto); }
+
+/* Chip selecionado: vira sólido escuro, pra não restar dúvida de
+   qual etiqueta o post vai levar. */
+.chip[data-ativo="1"] {
+  background: var(--grafite);
+  color: var(--branco);
+}
+.chip[data-ativo="1"]::before { display: none; }
 
 .enviar {
   width: 40px; height: 40px;
@@ -618,17 +664,58 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   overflow-wrap: anywhere;
 }
 
-.post-anexos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+/* Etiqueta do post (Projeto / Prompt / Dúvida) */
+.post-tag {
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(27, 26, 24, 0.10);
+  color: var(--texto-60);
+  white-space: nowrap;
+}
 
-.anexo {
+/* Link do projeto, no estilo "prévia" das redes sociais */
+.post-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 9px 15px;
   border-radius: 999px;
-  font-size: 0.72rem;
-  color: var(--texto-60);
+  font-size: 0.78rem;
+  color: var(--texto-80);
+  max-width: 100%;
+  transition: transform 0.2s;
 }
+.post-link:hover { transform: scale(1.03); }
+.post-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Barra de ações */
+.post-acoes {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  box-shadow: inset 0 1px 0 rgba(27, 26, 24, 0.10);
+}
+
+.acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--texto-50);
+  transition: color 0.2s, background 0.2s;
+}
+.acao:hover { color: var(--texto); background: rgba(27, 26, 24, 0.06); }
+
+/* Curtido: o coração preenche. É o feedback que diz "registrei". */
+.acao[data-curtido="1"] { color: var(--laranja-forte); }
+.acao[data-curtido="1"] .ic { fill: currentColor; }
 
 /* ==========================================================
    SEÇÕES

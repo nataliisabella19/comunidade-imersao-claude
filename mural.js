@@ -193,40 +193,74 @@
   render();
 })();
 
-/* ---------------- Mural ---------------- */
+/* ---------------- Mural do aluno — feed ---------------- */
 (function () {
-  const campo = document.getElementById("campo-post");
-  const botao = document.getElementById("btn-publicar");
-  const feed = document.getElementById("feed");
+  const campo    = document.getElementById("campo-post");
+  const nomeIn   = document.getElementById("campo-nome");
+  const linkIn   = document.getElementById("campo-link");
+  const linkBox  = document.getElementById("campo-link-caixa");
+  const chipLink = document.getElementById("chip-link");
+  const botao    = document.getElementById("btn-publicar");
+  const feed     = document.getElementById("feed");
+  const meuAvatar = document.getElementById("meu-avatar");
+  const chips    = document.querySelectorAll(".chip[data-tag]");
   if (!campo || !botao || !feed) return;
 
-  const CHAVE = "mural-imersao-claude";
+  const CHAVE_POSTS = "mural-imersao-claude";
+  const CHAVE_NOME  = "mural-imersao-claude-nome";
 
-  /* O textarea cresce junto com o texto, em vez de virar uma
-     caixinha com barra de rolagem interna. */
-  function ajustarAltura() {
-    campo.style.height = "auto";
-    campo.style.height = campo.scrollHeight + "px";
+  let tag = "";
+
+  /* ---------- Utilidades ---------- */
+
+  // Iniciais pro avatar: "Marina Julia" -> "MJ"
+  function iniciais(nome) {
+    const p = nome.trim().split(/\s+/).filter(Boolean);
+    if (!p.length) return "?";
+    return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
   }
 
-  function podePublicar() {
-    return campo.value.trim().length > 0;
+  /* Só aceita http/https. Um href com "javascript:" viraria execução
+     de código ao clique — é o buraco clássico de feed com link. */
+  function urlSegura(bruta) {
+    if (!bruta) return null;
+    let texto = bruta.trim();
+    if (!texto) return null;
+    if (!/^https?:\/\//i.test(texto)) texto = "https://" + texto;
+    try {
+      const u = new URL(texto);
+      if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+      return u;
+    } catch {
+      return null;
+    }
   }
 
-  function atualizarBotao() {
-    botao.disabled = !podePublicar();
+  function quandoAgora() {
+    return new Date().toLocaleString("pt-BR", {
+      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+    });
   }
 
-  /* Monta o card do post via DOM, nunca via innerHTML.
-     Se alguém digitar "<script>", tem que aparecer como texto
-     literal na tela — e não ser executado pelo navegador. */
-  function criarPost(texto, quando) {
+  /* ---------- Montagem do post ----------
+     Tudo via DOM e textContent, nunca innerHTML. Se alguém digitar
+     "<script>", tem que aparecer como texto na tela — não rodar. */
+  function iconeSvg(id, classe) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", classe);
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", "#" + id);
+    svg.appendChild(use);
+    return svg;
+  }
+
+  function criarPost(p) {
     const art = document.createElement("article");
     art.className = "post liquid-glass";
 
     const av = document.createElement("span");
     av.className = "avatar";
-    av.textContent = "VC";
+    av.textContent = iniciais(p.nome);
 
     const corpo = document.createElement("div");
     corpo.className = "post-corpo";
@@ -235,66 +269,156 @@
     topo.className = "post-topo";
 
     const nome = document.createElement("strong");
-    nome.textContent = "Você";
+    nome.textContent = p.nome;
+    topo.append(nome);
+
+    if (p.tag) {
+      const t = document.createElement("span");
+      t.className = "post-tag";
+      t.textContent = p.tag;
+      topo.append(t);
+    }
 
     const hora = document.createElement("span");
     hora.className = "post-hora";
-    hora.textContent = quando;
+    hora.textContent = p.quando;
+    topo.append(hora);
 
-    topo.append(nome, hora);
+    const texto = document.createElement("p");
+    texto.textContent = p.texto;
 
-    const p = document.createElement("p");
-    p.textContent = texto;
+    corpo.append(topo, texto);
 
-    corpo.append(topo, p);
+    const u = urlSegura(p.link);
+    if (u) {
+      const a = document.createElement("a");
+      a.className = "post-link liquid-glass";
+      a.href = u.href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      const rotulo = document.createElement("span");
+      rotulo.textContent = u.hostname.replace(/^www\./, "");
+      a.append(iconeSvg("i-link", "ic ic-sm"), rotulo);
+      corpo.append(a);
+    }
+
+    const acoes = document.createElement("div");
+    acoes.className = "post-acoes";
+    const curtir = document.createElement("button");
+    curtir.className = "acao";
+    curtir.type = "button";
+    curtir.dataset.curtidas = "0";
+    const cont = document.createElement("span");
+    cont.textContent = "0";
+    curtir.append(iconeSvg("i-coracao", "ic ic-sm"), cont);
+    acoes.append(curtir);
+    corpo.append(acoes);
+
     art.append(av, corpo);
     return art;
   }
 
+  /* ---------- Curtir (delegado: pega inclusive os posts novos) ---------- */
+  feed.addEventListener("click", (e) => {
+    const btn = e.target.closest(".acao");
+    if (!btn) return;
+
+    const curtido = btn.dataset.curtido === "1";
+    const base = Number(btn.dataset.curtidas || 0);
+    btn.dataset.curtido = curtido ? "0" : "1";
+    const span = btn.querySelector("span");
+    if (span) span.textContent = String(base + (curtido ? 0 : 1));
+  });
+
+  /* ---------- Estado do formulário ---------- */
+  function podePublicar() {
+    return campo.value.trim().length > 0 && nomeIn.value.trim().length > 0;
+  }
+
+  function atualizarBotao() {
+    botao.disabled = !podePublicar();
+  }
+
+  function ajustarAltura() {
+    campo.style.height = "auto";
+    campo.style.height = campo.scrollHeight + "px";
+  }
+
+  /* ---------- Persistência (só neste navegador!) ---------- */
   function lerSalvos() {
     try {
-      const bruto = localStorage.getItem(CHAVE);
+      const bruto = localStorage.getItem(CHAVE_POSTS);
       const lista = bruto ? JSON.parse(bruto) : [];
       return Array.isArray(lista) ? lista : [];
     } catch {
-      // localStorage bloqueado (aba anônima, cookies off) ou JSON
-      // corrompido: o mural degrada pro modo só-leitura em vez de
-      // quebrar a página inteira.
+      // localStorage bloqueado (aba anônima) ou JSON corrompido: o
+      // mural degrada pra só-leitura em vez de quebrar a página.
       return [];
     }
   }
 
   function salvar(lista) {
     try {
-      localStorage.setItem(CHAVE, JSON.stringify(lista));
-    } catch {
-      /* sem espaço ou sem permissão — o post ainda aparece na tela */
-    }
+      localStorage.setItem(CHAVE_POSTS, JSON.stringify(lista));
+    } catch { /* sem espaço ou sem permissão */ }
   }
 
+  /* ---------- Publicar ---------- */
   function publicar() {
     if (!podePublicar()) return;
 
-    const texto = campo.value.trim();
-    const agora = new Date().toLocaleString("pt-BR", {
-      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
-    });
+    const p = {
+      nome:  nomeIn.value.trim(),
+      texto: campo.value.trim(),
+      tag,
+      link:  linkIn ? linkIn.value.trim() : "",
+      quando: quandoAgora(),
+    };
 
-    feed.prepend(criarPost(texto, agora));
+    feed.prepend(criarPost(p));
 
     const lista = lerSalvos();
-    lista.unshift({ texto, quando: agora });
+    lista.unshift(p);
     salvar(lista.slice(0, 50));
 
+    try { localStorage.setItem(CHAVE_NOME, p.nome); } catch {}
+
+    // Limpa o formulário, mas mantém o nome: a pessoa não deve ter
+    // que redigitar quem ela é a cada post.
     campo.value = "";
+    if (linkIn) linkIn.value = "";
+    if (linkBox) linkBox.hidden = true;
+    if (chipLink) chipLink.dataset.ativo = "0";
+    tag = "";
+    chips.forEach((c) => (c.dataset.ativo = "0"));
+
     ajustarAltura();
     atualizarBotao();
   }
 
-  // Restaura o que a pessoa já tinha escrito antes
-  lerSalvos().reverse().forEach((p) => feed.prepend(criarPost(p.texto, p.quando)));
+  /* ---------- Ligações ---------- */
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const nova = chip.dataset.tag;
+      tag = tag === nova ? "" : nova;       // clicar de novo desmarca
+      chips.forEach((c) => (c.dataset.ativo = c.dataset.tag === tag ? "1" : "0"));
+    });
+  });
+
+  if (chipLink && linkBox) {
+    chipLink.addEventListener("click", () => {
+      linkBox.hidden = !linkBox.hidden;
+      chipLink.dataset.ativo = linkBox.hidden ? "0" : "1";
+      if (!linkBox.hidden && linkIn) linkIn.focus();
+    });
+  }
 
   campo.addEventListener("input", () => { ajustarAltura(); atualizarBotao(); });
+  nomeIn.addEventListener("input", () => {
+    atualizarBotao();
+    if (meuAvatar) meuAvatar.textContent = iniciais(nomeIn.value);
+  });
+
   botao.addEventListener("click", publicar);
 
   // Enter publica; Shift+Enter quebra linha.
@@ -304,6 +428,17 @@
       publicar();
     }
   });
+
+  /* ---------- Restaura o que já existia ---------- */
+  try {
+    const salvo = localStorage.getItem(CHAVE_NOME);
+    if (salvo) {
+      nomeIn.value = salvo;
+      if (meuAvatar) meuAvatar.textContent = iniciais(salvo);
+    }
+  } catch {}
+
+  lerSalvos().reverse().forEach((p) => feed.prepend(criarPost(p)));
 
   atualizarBotao();
 })();
