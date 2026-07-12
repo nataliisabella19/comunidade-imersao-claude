@@ -208,29 +208,12 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 /* ==========================================================
    SPLIT 52 / 48
    ========================================================== */
-.split { display: flex; min-height: 100vh; }
-
-/* ---------- Painel esquerdo (52%) ---------- */
-.painel-esq {
-  width: 52%;
-  position: relative;
-  display: flex;
-}
-
-.painel-esq-vidro {
-  position: absolute;
-  inset: 1.5rem;
-  border-radius: 1.5rem;
-  z-index: 0;
-}
-
-.painel-esq-conteudo {
-  position: relative;
-  z-index: 1;
-  flex: 1;
+.split {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
   padding: 3rem;
+  gap: 28px;
 }
 
 .nav {
@@ -250,54 +233,6 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   color: var(--branco);
 }
 
-/* --- Hero (centralizado) --- */
-.hero {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 28px;
-  padding: 40px 0;
-}
-
-.hero-logo { opacity: 0.9; }
-
-.hero h1 {
-  font-size: clamp(2.6rem, 4.6vw, 4.5rem);
-  letter-spacing: -0.05em;
-  color: var(--branco);
-}
-
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 22px 10px 10px;
-  border-radius: 999px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--branco);
-  transition: transform 0.2s;
-}
-.cta:hover  { transform: scale(1.05); }
-.cta:active { transform: scale(0.95); }
-
-.cta-circulo {
-  width: 28px; height: 28px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pills { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-
-/* --- Citação de rodapé --- */
-.citacao { text-align: center; display: flex; flex-direction: column; gap: 14px; }
-
 .rotulo {
   font-size: 0.7rem;
   letter-spacing: 0.2em;
@@ -305,34 +240,13 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   color: var(--texto-50);
 }
 
-.citacao blockquote {
-  font-size: 1.15rem;
-  font-weight: 300;
-  color: var(--texto-80);
-}
-
-.autor {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  color: var(--texto-60);
-}
-.autor .linha {
-  height: 1px;
-  width: 48px;
-  background: rgba(255,255,255,0.25);
-}
-
-/* ---------- Painel direito (48%) ---------- */
+/* ---------- Painel principal (largura total) ---------- */
 .painel-dir {
-  width: 48%;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 3rem 3rem 3rem 0;
+  gap: 24px;
+  min-width: 0;
 }
 
 .barra-topo {
@@ -645,19 +559,21 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 .rodape-nota { margin-top: 5px; font-size: 0.75rem; opacity: 0.7; }
 
 /* ==========================================================
-   RESPONSIVO — painel direito some, split vira coluna
+   RESPONSIVO
+   O painel principal NÃO pode ser escondido em tela pequena:
+   depois que o painel esquerdo saiu, ele é o único conteúdo
+   do topo — escondê-lo deixaria a página abrir vazia no celular.
    ========================================================== */
 @media (max-width: 1024px) {
-  .painel-dir { display: none; }
-  .painel-esq { width: 100%; }
-  .painel-esq-conteudo { padding: 2rem; }
-  .painel-esq-vidro { inset: 1rem; }
+  .split { padding: 2rem; }
 }
 
 @media (max-width: 640px) {
-  .painel-esq-conteudo { padding: 1.75rem; }
-  .hero h1 { font-size: 2.4rem; }
+  .split { padding: 1.75rem; }
   .secao { padding: 80px 1.5rem; }
+
+  /* Rótulo longo demais pro topo: a barra vira duas linhas */
+  .barra-topo { justify-content: flex-start; }
 
   .evento { flex-wrap: wrap; gap: 14px; }
   .evento-info { flex-basis: 100%; order: 3; }
