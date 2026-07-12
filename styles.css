@@ -1,255 +1,498 @@
-/* ============================================
-   Comunidade Imersão Claude — estilos
-   Pra mudar as cores do site inteiro, mexa só
-   nas variáveis aqui embaixo.
-   ============================================ */
+/* ==========================================================
+   Comunidade Imersão Claude
+   Estética: liquid glass morphism sobre vídeo. Grayscale puro.
+   ========================================================== */
 
 :root {
-  --fundo:        #16150f;
-  --fundo-alt:    #1e1c15;
-  --superficie:   #24211a;
-  --borda:        #38342a;
-  --texto:        #f0ede4;
-  --texto-suave:  #a9a291;
-  --marca:        #d97757;  /* laranja da marca */
-  --marca-clara:  #e89a80;
-  --raio:         14px;
+  --radius: 1rem;
+
+  /* Escala de cinza — HSL 0 0% X%, sem nenhum acento colorido */
+  --preto:     hsl(0 0% 0%);
+  --grafite:   hsl(0 0% 4%);
+  --branco:    hsl(0 0% 100%);
+
+  --texto:      rgba(255,255,255,1);
+  --texto-80:   rgba(255,255,255,0.8);
+  --texto-60:   rgba(255,255,255,0.6);
+  --texto-50:   rgba(255,255,255,0.5);
+
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-serif:   "Source Serif 4", Georgia, serif;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+html { scroll-behavior: smooth; }
+
 body {
-  background: var(--fundo);
+  min-height: 100vh;
+  background: var(--grafite);
   color: var(--texto);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  line-height: 1.65;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: inherit; text-decoration: none; }
+h1, h2, h3, h4 { font-weight: 500; letter-spacing: -0.03em; line-height: 1.1; }
 
-/* ---------- Topo / navegação ---------- */
-.topo {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(22, 21, 15, 0.85);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--borda);
+/* Serifada itálica: só dentro de headings/citações, como acento */
+h1 em, h2 em, h3 em, blockquote em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--texto-80);
+}
+
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+ul { list-style: none; }
+
+/* ---------- Vídeo de fundo (z-0) ---------- */
+.bg-video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* Escurece o vídeo pra garantir contraste do texto branco (WCAG) */
+.bg-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.55));
+  pointer-events: none;
+}
+
+/* Todo o conteúdo flutua acima (z-10) */
+.split, .secao, .rodape { position: relative; z-index: 10; }
+
+/* ==========================================================
+   LIQUID GLASS — dois tiers
+   Nenhum elemento usa `border`. A borda é 100% do ::before.
+   ========================================================== */
+
+/* --- Tier leve --- */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.45) 0%,
+    rgba(255,255,255,0.15) 20%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255,255,255,0.15) 80%,
+    rgba(255,255,255,0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* --- Tier pesado (CTA / painéis) --- */
+.liquid-glass-strong {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  -webkit-backdrop-filter: blur(50px);
+  backdrop-filter: blur(50px);
+  border: none;
+  box-shadow:
+    4px 4px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass-strong::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.5) 0%,
+    rgba(255,255,255,0.2) 20%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255,255,255,0.2) 80%,
+    rgba(255,255,255,0.5) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ---------- Ícones ---------- */
+.ic {
+  width: 20px; height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+.ic-sm { width: 16px; height: 16px; }
+
+.ic-circulo {
+  width: 32px; height: 32px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ---------- Pills ---------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--texto-80);
+  transition: transform 0.2s;
+}
+button.pill, a.pill { cursor: pointer; }
+button.pill:hover, a.pill:hover { transform: scale(1.05); }
+
+/* ==========================================================
+   SPLIT 52 / 48
+   ========================================================== */
+.split { display: flex; min-height: 100vh; }
+
+/* ---------- Painel esquerdo (52%) ---------- */
+.painel-esq {
+  width: 52%;
+  position: relative;
+  display: flex;
+}
+
+.painel-esq-vidro {
+  position: absolute;
+  inset: 1.5rem;
+  border-radius: 1.5rem;
+  z-index: 0;
+}
+
+.painel-esq-conteudo {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 3rem;
 }
 
 .nav {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 18px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;
 }
 
-.marca { font-weight: 700; letter-spacing: -0.01em; }
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  color: var(--branco);
+}
 
-.nav-links { display: flex; gap: 26px; font-size: 0.95rem; }
-.nav-links a { color: var(--texto-suave); transition: color 0.2s; }
-.nav-links a:hover { color: var(--marca-clara); }
-
-/* ---------- Hero ---------- */
+/* --- Hero (centralizado) --- */
 .hero {
-  max-width: 820px;
-  margin: 0 auto;
-  padding: 110px 24px 90px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  gap: 28px;
+  padding: 40px 0;
 }
 
-.tag {
-  display: inline-block;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--marca-clara);
-  border: 1px solid var(--borda);
-  border-radius: 999px;
-  padding: 6px 16px;
-  margin-bottom: 28px;
-}
+.hero-logo { opacity: 0.9; }
 
 .hero h1 {
-  font-size: clamp(2.1rem, 6vw, 3.6rem);
-  line-height: 1.12;
-  letter-spacing: -0.03em;
-  font-weight: 700;
+  font-size: clamp(2.6rem, 4.6vw, 4.5rem);
+  letter-spacing: -0.05em;
+  color: var(--branco);
 }
 
-.destaque { color: var(--marca); }
-
-.sub {
-  color: var(--texto-suave);
-  font-size: 1.12rem;
-  max-width: 620px;
-  margin: 26px auto 0;
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 22px 10px 10px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--branco);
+  transition: transform 0.2s;
 }
+.cta:hover  { transform: scale(1.05); }
+.cta:active { transform: scale(0.95); }
 
-.cta-linha {
+.cta-circulo {
+  width: 28px; height: 28px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
   display: flex;
-  gap: 14px;
+  align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 40px;
 }
 
-.btn {
-  display: inline-block;
-  padding: 14px 28px;
-  border-radius: var(--raio);
-  font-weight: 600;
-  font-size: 0.98rem;
-  transition: transform 0.15s, background 0.2s, border-color 0.2s;
+.pills { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* --- Citação de rodapé --- */
+.citacao { text-align: center; display: flex; flex-direction: column; gap: 14px; }
+
+.rotulo {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--texto-50);
 }
-.btn:hover { transform: translateY(-2px); }
 
-.btn-primario { background: var(--marca); color: #1a1206; }
-.btn-primario:hover { background: var(--marca-clara); }
+.citacao blockquote {
+  font-size: 1.15rem;
+  font-weight: 300;
+  color: var(--texto-80);
+}
 
-.btn-secundario { border: 1px solid var(--borda); color: var(--texto); }
-.btn-secundario:hover { border-color: var(--marca); }
+.autor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--texto-60);
+}
+.autor .linha {
+  height: 1px;
+  width: 48px;
+  background: rgba(255,255,255,0.25);
+}
 
-/* ---------- Seções ---------- */
+/* ---------- Painel direito (48%) ---------- */
+.painel-dir {
+  width: 48%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 3rem 3rem 3rem 0;
+}
+
+.barra-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sociais { gap: 14px; padding: 7px 8px 7px 18px; }
+.sociais a { color: var(--branco); transition: color 0.2s; display: flex; }
+.sociais a:hover { color: var(--texto-80); }
+
+.card-comunidade {
+  width: 14rem;
+  padding: 18px;
+  border-radius: var(--radius);
+}
+.card-comunidade h3 { font-size: 0.95rem; margin-bottom: 6px; }
+.card-comunidade p  { font-size: 0.78rem; color: var(--texto-60); line-height: 1.5; }
+
+/* --- Bloco de destaque (embaixo) --- */
+.destaque {
+  margin-top: auto;
+  padding: 16px;
+  border-radius: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.destaque-linha { display: flex; gap: 14px; }
+
+.mini {
+  flex: 1;
+  padding: 20px;
+  border-radius: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s;
+}
+.mini:hover { transform: scale(1.05); }
+.mini h4 { font-size: 0.92rem; }
+.mini p  { font-size: 0.75rem; color: var(--texto-60); }
+
+.destaque-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 1.5rem;
+}
+.destaque-card img { border-radius: 0.9rem; object-fit: cover; }
+.destaque-txt { flex: 1; }
+.destaque-txt h4 { font-size: 0.92rem; margin-bottom: 3px; }
+.destaque-txt p  { font-size: 0.75rem; color: var(--texto-60); }
+
+.btn-mais {
+  width: 32px; height: 32px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+.btn-mais:hover { transform: scale(1.05); }
+
+/* ==========================================================
+   SEÇÕES ABAIXO DO HERO — agenda e materiais
+   ========================================================== */
 .secao {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 88px 24px;
+  padding: 120px 3rem;
 }
-
-.secao-alt {
-  max-width: none;
-  background: var(--fundo-alt);
-  border-top: 1px solid var(--borda);
-  border-bottom: 1px solid var(--borda);
-}
-.secao-alt > * { max-width: 1080px; margin-left: auto; margin-right: auto; }
 
 .secao h2 {
-  font-size: clamp(1.7rem, 4vw, 2.3rem);
-  letter-spacing: -0.02em;
-  margin-bottom: 12px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--branco);
+  margin: 8px 0 48px;
 }
 
-.secao-intro {
-  color: var(--texto-suave);
-  max-width: 620px;
-  margin-bottom: 48px;
-}
-
-/* ---------- Cards (Sobre) ---------- */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 22px;
-}
-
-.card {
-  background: var(--superficie);
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  padding: 30px;
-  transition: border-color 0.2s, transform 0.2s;
-}
-.card:hover { border-color: var(--marca); transform: translateY(-3px); }
-
-.card-icone { font-size: 1.8rem; margin-bottom: 14px; }
-.card h3 { font-size: 1.12rem; margin-bottom: 8px; }
-.card p { color: var(--texto-suave); font-size: 0.96rem; }
-
-/* ---------- Agenda ---------- */
-.agenda { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+/* --- Agenda --- */
+.agenda { display: flex; flex-direction: column; gap: 14px; }
 
 .evento {
   display: flex;
   align-items: center;
-  gap: 24px;
-  background: var(--superficie);
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  padding: 24px 28px;
-  transition: border-color 0.2s;
+  gap: 22px;
+  padding: 22px 26px;
+  border-radius: 1.5rem;
+  transition: transform 0.2s;
 }
-.evento:hover { border-color: var(--marca); }
+.evento:hover { transform: scale(1.01); }
 
 .evento-data {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 68px;
+  min-width: 60px;
   padding: 10px;
-  background: var(--fundo);
-  border: 1px solid var(--borda);
-  border-radius: 10px;
+  border-radius: 0.9rem;
+  background: rgba(255,255,255,0.06);
 }
-.dia { font-size: 1.6rem; font-weight: 700; line-height: 1; color: var(--marca); }
-.mes { font-size: 0.72rem; letter-spacing: 0.1em; color: var(--texto-suave); margin-top: 4px; }
+.dia { font-size: 1.5rem; font-weight: 500; line-height: 1; color: var(--branco); }
+.mes { font-size: 0.65rem; letter-spacing: 0.12em; color: var(--texto-50); margin-top: 4px; }
 
 .evento-info { flex: 1; }
-.evento-info h3 { font-size: 1.08rem; margin-bottom: 4px; }
-.evento-info p { color: var(--texto-suave); font-size: 0.95rem; margin-bottom: 8px; }
-.evento-hora { font-size: 0.85rem; color: var(--texto-suave); }
+.evento-info h3 { font-size: 1.05rem; margin-bottom: 3px; }
+.evento-info p  { font-size: 0.85rem; color: var(--texto-60); }
+
+.evento-hora { font-size: 0.78rem; color: var(--texto-50); white-space: nowrap; }
 
 .badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 6px 12px;
   border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  color: var(--branco);
   white-space: nowrap;
 }
-.badge-proximo { background: var(--marca); color: #1a1206; }
 
-/* ---------- Materiais ---------- */
+/* --- Materiais --- */
 .materiais {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
 }
 
 .material {
   display: flex;
   flex-direction: column;
-  background: var(--superficie);
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  padding: 28px;
-  transition: border-color 0.2s, transform 0.2s;
+  gap: 12px;
+  padding: 26px;
+  border-radius: 1.5rem;
+  transition: transform 0.2s;
 }
-.material:hover { border-color: var(--marca); transform: translateY(-3px); }
+.material:hover { transform: scale(1.05); }
+.material h3 { font-size: 1rem; }
+.material p  { font-size: 0.83rem; color: var(--texto-60); flex: 1; }
 
-.material-tipo {
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--marca-clara);
-  margin-bottom: 12px;
+.material-seta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--texto-80);
 }
-.material h3 { font-size: 1.1rem; margin-bottom: 6px; }
-.material p { color: var(--texto-suave); font-size: 0.94rem; flex: 1; margin-bottom: 18px; }
-.material-seta { font-size: 0.9rem; font-weight: 600; color: var(--marca); }
 
 /* ---------- Rodapé ---------- */
 .rodape {
   text-align: center;
-  padding: 56px 24px;
-  border-top: 1px solid var(--borda);
-  color: var(--texto-suave);
-  font-size: 0.92rem;
+  padding: 70px 24px 90px;
+  color: var(--texto-50);
+  font-size: 0.85rem;
 }
-.rodape-nota { margin-top: 6px; opacity: 0.65; font-size: 0.85rem; }
+.rodape-nota { margin-top: 5px; font-size: 0.75rem; opacity: 0.7; }
 
-/* ---------- Celular ---------- */
+/* ==========================================================
+   RESPONSIVO — painel direito some, split vira coluna
+   ========================================================== */
+@media (max-width: 1024px) {
+  .painel-dir { display: none; }
+  .painel-esq { width: 100%; }
+  .painel-esq-conteudo { padding: 2rem; }
+  .painel-esq-vidro { inset: 1rem; }
+}
+
 @media (max-width: 640px) {
-  .hero { padding: 70px 20px 60px; }
-  .secao { padding: 64px 20px; }
-  .evento { flex-direction: column; align-items: flex-start; gap: 16px; }
-  .btn { width: 100%; text-align: center; }
+  .painel-esq-conteudo { padding: 1.75rem; }
+  .hero h1 { font-size: 2.4rem; }
+  .secao { padding: 80px 1.5rem; }
+
+  .evento { flex-wrap: wrap; gap: 14px; }
+  .evento-info { flex-basis: 100%; order: 3; }
+}
+
+/* Respeita quem prefere menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+  html { scroll-behavior: auto; }
 }
