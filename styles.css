@@ -196,8 +196,13 @@ ul { list-style: none; }
   border-radius: 999px;
   font-size: 0.75rem;
   color: var(--texto-80);
+  white-space: nowrap;
   transition: transform 0.2s;
 }
+
+/* Rótulo longo: não pode espremer nem quebrar em duas linhas */
+.btn-conta { flex-shrink: 0; }
+.barra-topo .sociais { min-width: 0; }
 button.pill, a.pill { cursor: pointer; }
 button.pill:hover, a.pill:hover { transform: scale(1.05); }
 
