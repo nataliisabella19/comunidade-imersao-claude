@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-checando="1">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -172,12 +172,7 @@
   <h2>O que a turma está construindo</h2>
 
   <!-- ---------- Barra de login ---------- -->
-  <div class="auth-barra" id="auth-barra" data-logado="0">
-    <button class="pill btn-conta" id="btn-entrar" type="button">
-      <svg class="ic ic-sm"><use href="#i-google"/></svg>
-      <span>Entrar com Google</span>
-    </button>
-
+  <div class="auth-barra" id="auth-barra" data-logado="1">
     <div class="auth-logado">
       <span>Conectado como <strong id="auth-nome">—</strong></span>
       <button class="acao" id="btn-sair" type="button">Sair</button>
@@ -185,12 +180,12 @@
   </div>
 
   <!-- ---------- Caixa de publicar ---------- -->
-  <div class="compositor liquid-glass-strong" data-bloqueado="1">
+  <div class="compositor liquid-glass-strong" data-bloqueado="0">
     <div class="compositor-linha">
       <span class="avatar" id="meu-avatar">?</span>
       <div class="compositor-campos">
         <label class="sr-only" for="campo-post">Conte o que você construiu</label>
-        <textarea id="campo-post" class="compositor-campo" rows="1" disabled
+        <textarea id="campo-post" class="compositor-campo" rows="1"
           placeholder="O que você construiu com o Claude?"></textarea>
       </div>
     </div>
@@ -323,6 +318,7 @@
 </footer>
 
 <script src="background.js"></script>
+<script type="module" src="guard.js"></script>
 <script src="carrossel.js"></script>
 <!-- type="module": o mural importa a biblioteca do Supabase -->
 <script type="module" src="mural.js"></script>

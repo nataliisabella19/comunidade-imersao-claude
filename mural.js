@@ -1,23 +1,11 @@
 /* ==========================================================
    Mural do aluno — feed real, ligado ao Supabase
 
-   Os posts agora vivem num banco de dados: quem publica é visto
-   por TODO MUNDO. Login com Google.
-
-   Sobre a chave abaixo estar exposta: é a chave `anon`, e ela é
-   pública por natureza — todo site que usa Supabase a expõe. Quem
-   protege os dados NÃO é o segredo da chave, e sim as regras de
-   RLS no banco (ver supabase-setup.sql): elas impedem que alguém
-   edite ou apague o post de outra pessoa, mesmo montando a
-   requisição na mão pelo console do navegador.
+   Esta página só é alcançada com sessão válida (ver guard.js),
+   então aqui sempre existe um usuário logado.
    ========================================================== */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const SUPABASE_URL  = "https://hlyjhofiotsverogkorg.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhseWpob2Zpb3RzdmVyb2drb3JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODcwNDgsImV4cCI6MjA5OTQ2MzA0OH0.id4-EmVN64IsbHaCFQUccDRkFi2SYYCH0IH9Pe8IEFc";
-
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+import { sb } from "./supabase.js";
 
 /* ---------- Elementos ---------- */
 const campo      = document.getElementById("campo-post");
@@ -30,7 +18,6 @@ const meuAvatar  = document.getElementById("meu-avatar");
 const chips      = document.querySelectorAll(".chip[data-tag]");
 const compositor = document.querySelector(".compositor");
 const barraAuth  = document.getElementById("auth-barra");
-const btnEntrar  = document.getElementById("btn-entrar");
 const btnSair    = document.getElementById("btn-sair");
 const authNome   = document.getElementById("auth-nome");
 const aviso      = document.getElementById("mural-aviso");
@@ -370,25 +357,14 @@ feed.addEventListener("click", async (e) => {
   }
 });
 
-/* ================= Login ================= */
-async function entrar() {
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: "google",
-    // Volta pra esta mesma página depois do login.
-    options: { redirectTo: window.location.origin + window.location.pathname },
-  });
-  if (error) mostrarErro("Não consegui abrir o login: " + error.message);
-}
-
+/* ================= Sair ================= */
 const sair = () => sb.auth.signOut();
 
 /* ================= Estado da interface ================= */
 function atualizarAviso() {
   if (!aviso) return;
   aviso.dataset.erro = "0";
-  aviso.textContent = usuario
-    ? "Seu post fica visível para toda a turma."
-    : "Entre com o Google para publicar. Ler o mural não exige login.";
+  aviso.textContent = "Seu post fica visível para toda a turma.";
 }
 
 function atualizarBotao() {
@@ -443,7 +419,6 @@ campo.addEventListener("keydown", (e) => {
 });
 
 botao.addEventListener("click", publicar);
-btnEntrar?.addEventListener("click", entrar);
 btnSair?.addEventListener("click", sair);
 
 /* ================= Partida ================= */

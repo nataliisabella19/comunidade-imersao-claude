@@ -32,6 +32,11 @@
 
 html { scroll-behavior: smooth; }
 
+/* A página nasce escondida e só aparece quando o porteiro (guard.js)
+   confirma a sessão. Sem isso, quem não tem login veria um lampejo
+   do conteúdo antes de ser redirecionado — feio e confuso. */
+html[data-checando="1"] body { visibility: hidden; }
+
 body {
   min-height: 100vh;
   /* O degradê do print: areia em cima, laranja embaixo. Fixo, pra
@@ -869,6 +874,69 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   font-size: 0.85rem;
 }
 .rodape-nota { margin-top: 5px; font-size: 0.75rem; opacity: 0.75; }
+
+/* ==========================================================
+   PÁGINA DE LOGIN
+   ========================================================== */
+.login-palco {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 2rem;
+}
+
+.login-cartao {
+  width: 100%;
+  max-width: 420px;
+  padding: 48px 40px 40px;
+  border-radius: 2.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.login-logo { opacity: 0.9; }
+
+.login-cartao h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  color: var(--grafite);
+}
+
+.login-sub {
+  font-size: 0.95rem;
+  color: var(--texto-60);
+  max-width: 30ch;
+  line-height: 1.55;
+}
+
+.login-botao {
+  margin-top: 10px;
+  padding: 14px 26px;
+  font-size: 0.92rem;
+}
+
+.login-recado {
+  font-size: 0.75rem;
+  color: var(--texto-50);
+  line-height: 1.5;
+  max-width: 34ch;
+  transition: color 0.2s;
+}
+.login-recado[data-erro="1"] { color: #C0341A; font-weight: 500; }
+
+.login-rodape {
+  font-size: 0.78rem;
+  color: var(--texto-50);
+}
 
 /* ==========================================================
    RESPONSIVO

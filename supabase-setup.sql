@@ -47,10 +47,16 @@ create table if not exists curtidas (
 alter table posts    enable row level security;
 alter table curtidas enable row level security;
 
--- Ler: qualquer pessoa, mesmo deslogada. O mural é público.
+-- Ler: SÓ quem está logado.
+-- É isto que fecha a comunidade de verdade. A tela de login em si
+-- é só uma porta — um site estático não consegue esconder nada.
+-- Quem realmente recusa o acesso aos posts é esta linha, aqui no
+-- banco, e ela vale mesmo que a pessoa monte a requisição na mão.
 drop policy if exists "posts_leitura_publica" on posts;
-create policy "posts_leitura_publica"
+drop policy if exists "posts_leitura_logado" on posts;
+create policy "posts_leitura_logado"
   on posts for select
+  to authenticated
   using (true);
 
 -- Escrever: só logado, e só em nome de si mesmo.
@@ -80,8 +86,10 @@ create policy "posts_excluir_dono"
 -- Curtidas: todo mundo vê a contagem; só o próprio usuário
 -- cria e remove a curtida dele.
 drop policy if exists "curtidas_leitura_publica" on curtidas;
-create policy "curtidas_leitura_publica"
+drop policy if exists "curtidas_leitura_logado" on curtidas;
+create policy "curtidas_leitura_logado"
   on curtidas for select
+  to authenticated
   using (true);
 
 drop policy if exists "curtidas_criar_propria" on curtidas;
