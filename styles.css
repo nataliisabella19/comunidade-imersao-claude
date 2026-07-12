@@ -302,6 +302,17 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   perspective: 1400px;       /* a "distância do olho" até o palco */
   transform-style: preserve-3d;
   overflow: visible;         /* o vidro precisa poder sair da caixa */
+  cursor: grab;
+
+  /* Deixa o navegador cuidar da rolagem vertical e me dá o eixo X.
+     Sem isso, o deslize horizontal sequestraria também o scroll da
+     página no celular — a pessoa não conseguiria descer o site. */
+  touch-action: pan-y;
+}
+
+.trilho.deslizando {
+  cursor: grabbing;
+  user-select: none;
 }
 
 .trilho-card {
