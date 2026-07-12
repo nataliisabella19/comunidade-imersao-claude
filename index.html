@@ -37,6 +37,7 @@
   <symbol id="i-lixeira" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-google" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/></symbol>
 </svg>
 
 <!-- ========== HERO: SPLIT 52 / 48 ========== -->
@@ -170,17 +171,26 @@
   <p class="rotulo">MURAL DO ALUNO</p>
   <h2>O que a turma está construindo</h2>
 
+  <!-- ---------- Barra de login ---------- -->
+  <div class="auth-barra" id="auth-barra" data-logado="0">
+    <button class="pill btn-conta" id="btn-entrar" type="button">
+      <svg class="ic ic-sm"><use href="#i-google"/></svg>
+      <span>Entrar com Google</span>
+    </button>
+
+    <div class="auth-logado">
+      <span>Conectado como <strong id="auth-nome">—</strong></span>
+      <button class="acao" id="btn-sair" type="button">Sair</button>
+    </div>
+  </div>
+
   <!-- ---------- Caixa de publicar ---------- -->
-  <div class="compositor liquid-glass-strong">
+  <div class="compositor liquid-glass-strong" data-bloqueado="1">
     <div class="compositor-linha">
       <span class="avatar" id="meu-avatar">?</span>
       <div class="compositor-campos">
-        <label class="sr-only" for="campo-nome">Seu nome</label>
-        <input id="campo-nome" class="compositor-nome" type="text"
-          maxlength="28" placeholder="Seu nome" autocomplete="name">
-
         <label class="sr-only" for="campo-post">Conte o que você construiu</label>
-        <textarea id="campo-post" class="compositor-campo" rows="1"
+        <textarea id="campo-post" class="compositor-campo" rows="1" disabled
           placeholder="O que você construiu com o Claude?"></textarea>
       </div>
     </div>
@@ -214,53 +224,13 @@
     </div>
   </div>
 
-  <p class="mural-aviso">
-    <strong>Modo demonstração.</strong> Seu post fica salvo apenas neste navegador —
-    o resto da turma ainda não consegue vê-lo. Para o mural funcionar de verdade,
-    falta conectar um banco de dados.
+  <p class="mural-aviso" id="mural-aviso" data-erro="0">
+    Entre com o Google para publicar. Ler o mural não exige login.
   </p>
 
-  <!-- ---------- Feed ---------- -->
+  <!-- Feed: preenchido pelo mural.js a partir do banco -->
   <div class="feed" id="feed">
-    <article class="post liquid-glass">
-      <span class="avatar">MJ</span>
-      <div class="post-corpo">
-        <div class="post-topo">
-          <strong>Marina Julia</strong>
-          <span class="post-tag">Projeto</span>
-          <span class="post-hora">há 2 horas</span>
-        </div>
-        <p>Terminei meu portfólio inteiro com o Claude Code. A parte que mais me
-        surpreendeu foi ele ler meu CSS antigo e refatorar sem quebrar nada.</p>
-        <a class="post-link liquid-glass" href="#">
-          <svg class="ic ic-sm"><use href="#i-link"/></svg>
-          <span>marinajulia.dev</span>
-        </a>
-        <div class="post-acoes">
-          <button class="acao js-curtir" type="button" data-curtidas="12">
-            <svg class="ic ic-sm"><use href="#i-coracao"/></svg><span>12</span>
-          </button>
-        </div>
-      </div>
-    </article>
-
-    <article class="post liquid-glass">
-      <span class="avatar">RC</span>
-      <div class="post-corpo">
-        <div class="post-topo">
-          <strong>Rafa Costa</strong>
-          <span class="post-tag">Prompt</span>
-          <span class="post-hora">ontem</span>
-        </div>
-        <p>Automatizei o relatório semanal que eu fazia na mão. Levava 3 horas,
-        agora roda sozinho. Deixo o prompt aqui pra quem quiser copiar.</p>
-        <div class="post-acoes">
-          <button class="acao js-curtir" type="button" data-curtidas="7">
-            <svg class="ic ic-sm"><use href="#i-coracao"/></svg><span>7</span>
-          </button>
-        </div>
-      </div>
-    </article>
+    <p class="feed-vazio">Carregando o mural…</p>
   </div>
 </section>
 
@@ -353,6 +323,8 @@
 </footer>
 
 <script src="background.js"></script>
-<script src="mural.js"></script>
+<script src="carrossel.js"></script>
+<!-- type="module": o mural importa a biblioteca do Supabase -->
+<script type="module" src="mural.js"></script>
 </body>
 </html>

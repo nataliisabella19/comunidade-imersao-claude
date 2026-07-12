@@ -522,30 +522,46 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   flex-shrink: 0;
 }
 
+/* --- Barra de login --- */
+.auth-barra {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  min-height: 42px;
+}
+.auth-logado {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: var(--texto-60);
+}
+.auth-logado strong { color: var(--texto); font-weight: 500; }
+
+/* Só um dos dois estados aparece por vez */
+.auth-barra[data-logado="1"] #btn-entrar { display: none; }
+.auth-barra[data-logado="1"] .auth-logado { display: flex; }
+
 .compositor {
   padding: 20px;
   border-radius: 1.75rem;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  transition: opacity 0.25s;
+}
+
+/* Deslogado: a caixa fica visível mas apagada e inerte. Some o
+   convite de escrever num campo que ia recusar o texto. */
+.compositor[data-bloqueado="1"] {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .compositor-linha { display: flex; align-items: flex-start; gap: 14px; }
 
 .compositor-campos { flex: 1; min-width: 0; }
-
-.compositor-nome {
-  width: 100%;
-  background: none;
-  border: none;
-  outline: none;
-  color: var(--texto);
-  font: inherit;
-  font-weight: 500;
-  font-size: 0.92rem;
-  padding: 4px 0 2px;
-}
-.compositor-nome::placeholder { color: var(--texto-50); font-weight: 400; }
 
 /* Campo de link: nasce escondido e abre ao clicar no chip "Link" */
 .campo-link {
@@ -636,6 +652,16 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   font-size: 0.75rem;
   color: var(--texto-60);
   line-height: 1.5;
+  transition: color 0.2s;
+}
+/* Erro do banco (ex.: anti-spam) reaproveita o mesmo espaço */
+.mural-aviso[data-erro="1"] { color: #C0341A; font-weight: 500; }
+
+.feed-vazio {
+  padding: 30px 4px;
+  font-size: 0.88rem;
+  color: var(--texto-50);
+  text-align: center;
 }
 
 .feed { display: flex; flex-direction: column; gap: 14px; }
