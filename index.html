@@ -17,11 +17,10 @@
 </head>
 <body>
 
-<!-- ========== VÍDEO DE FUNDO (z-0) ========== -->
-<video class="bg-video" autoplay loop muted playsinline poster="thumb.svg">
-  <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4" type="video/mp4">
-</video>
+<!-- ========== FUNDO DE PARTÍCULAS (z-0) ========== -->
+<canvas id="bg" class="bg-canvas"></canvas>
 <div class="bg-scrim"></div>
+<p id="bg-contador" class="bg-contador"></p>
 
 <!-- ========== ÍCONES (lucide, definidos uma vez e reusados) ========== -->
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
@@ -232,5 +231,6 @@
   <p class="rodape-nota">Construído e publicado com Claude Code.</p>
 </footer>
 
+<script src="background.js"></script>
 </body>
 </html>

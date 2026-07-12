@@ -26,7 +26,10 @@ html { scroll-behavior: smooth; }
 
 body {
   min-height: 100vh;
-  background: var(--grafite);
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 42%, hsl(0 0% 11%) 0%, hsl(0 0% 3%) 70%),
+    hsl(0 0% 2%);
+  background-attachment: fixed;
   color: var(--texto);
   font-family: var(--font-display);
   font-weight: 400;
@@ -48,22 +51,39 @@ a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
 ul { list-style: none; }
 
-/* ---------- Vídeo de fundo (z-0) ---------- */
-.bg-video {
+/* ---------- Fundo de partículas (z-0) ---------- */
+.bg-canvas {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   z-index: 0;
 }
 
-/* Escurece o vídeo pra garantir contraste do texto branco (WCAG) */
+/* Vinheta: escurece as bordas e preserva o miolo luminoso,
+   dando contraste ao texto branco sem apagar as partículas. */
 .bg-scrim {
   position: fixed;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.55));
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 45%,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0.35) 55%,
+    rgba(0,0,0,0.75) 100%
+  );
+}
+
+/* Contador, no canto inferior esquerdo */
+.bg-contador {
+  position: fixed;
+  left: 14px;
+  bottom: 12px;
+  z-index: 2;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: var(--texto-50);
   pointer-events: none;
 }
 
