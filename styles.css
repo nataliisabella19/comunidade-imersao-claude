@@ -320,20 +320,8 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   scrollbar-width: none;
   padding: 4px;             /* respiro pro ::before da borda não ser cortado */
   margin: -4px;
-  cursor: grab;
 }
 .trilho::-webkit-scrollbar { display: none; }
-
-/* Durante o arrasto: o scroll tem que ser instantâneo e sem encaixe.
-   Com scroll-behavior: smooth ligado, cada pixel puxado viraria uma
-   animação e o card ficaria "borrachudo", atrasado em relação à mão. */
-.trilho.arrastando {
-  cursor: grabbing;
-  scroll-behavior: auto;
-  scroll-snap-type: none;
-  user-select: none;
-}
-.trilho.arrastando .trilho-card { transform: none; }  /* sem hover no meio do gesto */
 
 /* --- Card grande, formato vitrine de loja --- */
 .trilho-card {

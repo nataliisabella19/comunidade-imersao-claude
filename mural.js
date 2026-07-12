@@ -9,7 +9,7 @@
    Pra virar um mural de verdade, precisa de um backend.
    ========================================================== */
 
-/* ---------------- Carrossel: loop infinito + arrastar ---------------- */
+/* ---------------- Carrossel: setas, estilo Netflix ---------------- */
 (function () {
   const trilho = document.getElementById("trilho");
   if (!trilho) return;
@@ -65,68 +65,20 @@
   // Começa no bloco do meio
   requestAnimationFrame(() => saltar(voltaLarga()));
 
-  trilho.addEventListener("scroll", () => {
-    // Enquanto o dedo/mouse está arrastando, não recentro: o salto
-    // no meio do gesto faria o card "escapar" da mão.
-    if (!arrastando) recentrar();
-  }, { passive: true });
-
+  trilho.addEventListener("scroll", recentrar, { passive: true });
   window.addEventListener("resize", recentrar);
 
-  /* ---------- Setas ---------- */
+  /* ---------- Setas: a única forma de navegar ----------
+     Avança um "bloco" inteiro de cards por clique, como na Netflix.
+     Uso 0.85 da largura visível de propósito: sobra uma fatia do
+     card anterior na tela, dando continuidade visual em vez de
+     trocar a tela inteira de conteúdo a cada clique. */
   setas.forEach((btn) => {
     btn.addEventListener("click", () => {
       const dir = Number(btn.dataset.dir);
       trilho.scrollBy({ left: dir * trilho.clientWidth * 0.85, behavior: "smooth" });
     });
   });
-
-  /* ---------- Arrastar com o cursor ---------- */
-  let arrastando = false;
-  let arrastou = false;   // diferencia um clique de um arrasto
-  let x0 = 0;
-  let scroll0 = 0;
-
-  trilho.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
-    arrastando = true;
-    arrastou = false;
-    x0 = e.clientX;
-    scroll0 = trilho.scrollLeft;
-    trilho.classList.add("arrastando");
-  });
-
-  trilho.addEventListener("pointermove", (e) => {
-    if (!arrastando) return;
-    const dx = e.clientX - x0;
-
-    // Só vira "arrasto" depois de 4px. Sem essa folga, o tremor
-    // natural da mão ao clicar cancelaria o clique no card.
-    if (Math.abs(dx) > 4) {
-      arrastou = true;
-      trilho.setPointerCapture(e.pointerId);
-    }
-    if (arrastou) trilho.scrollLeft = scroll0 - dx;
-  });
-
-  function soltar() {
-    if (!arrastando) return;
-    arrastando = false;
-    trilho.classList.remove("arrastando");
-    recentrar();
-  }
-
-  trilho.addEventListener("pointerup", soltar);
-  trilho.addEventListener("pointercancel", soltar);
-
-  // Se a pessoa arrastou, o "clique" que o navegador dispara no fim
-  // do gesto não pode abrir o card.
-  trilho.addEventListener("click", (e) => {
-    if (arrastou) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }, true);
 })();
 
 /* ---------------- Mural ---------------- */
