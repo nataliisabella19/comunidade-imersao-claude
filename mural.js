@@ -1,85 +1,15 @@
 /* ==========================================================
-   1. Carrossel — setas e estado dos botões
-   2. Mural — compositor de posts
+   Mural — compositor de posts
 
    ATENÇÃO (importante): o site é estático, sem servidor.
    Os posts são gravados no localStorage, ou seja, ficam SÓ no
    navegador de quem escreveu. Ninguém mais enxerga. É uma
    demonstração de interface, não uma comunidade funcionando.
    Pra virar um mural de verdade, precisa de um backend.
+
+   O carrossel não tem mais JavaScript: sem as setas, ele é só
+   uma faixa com rolagem horizontal nativa (trackpad / dedo).
    ========================================================== */
-
-/* ---------------- Carrossel: setas, estilo Netflix ---------------- */
-(function () {
-  const trilho = document.getElementById("trilho");
-  if (!trilho) return;
-
-  const setas = document.querySelectorAll(".seta");
-  const originais = Array.from(trilho.children);
-  if (!originais.length) return;
-
-  /* ---------- Loop infinito ----------
-     O truque: triplico os cards. O usuário sempre navega no bloco
-     do MEIO. Quando ele encosta no bloco da esquerda ou da direita,
-     eu teletransporto o scroll de volta pro meio — um salto exato
-     de uma "volta" inteira, então visualmente nada muda. É por isso
-     que a fita nunca "bate" no fim: ela não tem fim.
-
-     Os clones são aria-hidden: pro leitor de tela, os cards
-     continuam existindo uma vez só. */
-  function clonar() {
-    originais.forEach((el) => {
-      const antes = el.cloneNode(true);
-      const depois = el.cloneNode(true);
-      antes.setAttribute("aria-hidden", "true");
-      depois.setAttribute("aria-hidden", "true");
-      trilho.prepend(antes);
-      trilho.append(depois);
-    });
-  }
-
-  // Largura de UMA volta (o conjunto original de cards + gaps)
-  function voltaLarga() {
-    return trilho.scrollWidth / 3;
-  }
-
-  // Salto instantâneo: precisa desligar o scroll suave e o encaixe,
-  // senão o navegador anima o teletransporte e a costura fica visível.
-  function saltar(delta) {
-    const snap = trilho.style.scrollSnapType;
-    trilho.style.scrollBehavior = "auto";
-    trilho.style.scrollSnapType = "none";
-    trilho.scrollLeft += delta;
-    trilho.offsetHeight; // força o navegador a aplicar antes de religar
-    trilho.style.scrollBehavior = "";
-    trilho.style.scrollSnapType = snap;
-  }
-
-  function recentrar() {
-    const volta = voltaLarga();
-    if (trilho.scrollLeft < volta * 0.5) saltar(volta);
-    else if (trilho.scrollLeft > volta * 1.5) saltar(-volta);
-  }
-
-  clonar();
-  // Começa no bloco do meio
-  requestAnimationFrame(() => saltar(voltaLarga()));
-
-  trilho.addEventListener("scroll", recentrar, { passive: true });
-  window.addEventListener("resize", recentrar);
-
-  /* ---------- Setas: a única forma de navegar ----------
-     Avança um "bloco" inteiro de cards por clique, como na Netflix.
-     Uso 0.85 da largura visível de propósito: sobra uma fatia do
-     card anterior na tela, dando continuidade visual em vez de
-     trocar a tela inteira de conteúdo a cada clique. */
-  setas.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const dir = Number(btn.dataset.dir);
-      trilho.scrollBy({ left: dir * trilho.clientWidth * 0.85, behavior: "smooth" });
-    });
-  });
-})();
 
 /* ---------------- Mural ---------------- */
 (function () {

@@ -214,10 +214,11 @@
       projG[i] = brilho;
     }
 
-    // --- Conexões: duas passadas ---
-    // Passada 1: a malha inteira, bem fraquinha.
+    /* --- Conexões: duas passadas ---
+       Grafite, não branco: o fundo agora é claro (bege → laranja),
+       e traço branco sobre bege simplesmente some. */
     ctx.lineWidth = 0.6;
-    ctx.strokeStyle = "rgba(255,255,255,0.055)";
+    ctx.strokeStyle = "rgba(27,26,24,0.10)";
     ctx.beginPath();
     for (let k = 0; k < conexoes.length; k++) {
       const a = conexoes[k][0], b = conexoes[k][1];
@@ -234,7 +235,7 @@
         const a = conexoes[k][0], b = conexoes[k][1];
         const g = Math.max(projG[a], projG[b]);
         if (g < 0.02) continue;
-        ctx.strokeStyle = `rgba(255,255,255,${0.055 + g * 0.4})`;
+        ctx.strokeStyle = `rgba(27,26,24,${0.10 + g * 0.35})`;
         ctx.beginPath();
         ctx.moveTo(projX[a], projY[a]);
         ctx.lineTo(projX[b], projY[b]);
@@ -248,11 +249,11 @@
       const g = projG[i];
 
       const raio = 1.1 + prox * 1.9 + g * 2.2;
-      const alpha = Math.min(1, 0.28 + prox * 0.55 + g * 0.5);
+      const alpha = Math.min(0.8, 0.16 + prox * 0.4 + g * 0.4);
 
       ctx.beginPath();
       ctx.arc(projX[i], projY[i], raio, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fillStyle = `rgba(27,26,24,${alpha})`;
       ctx.fill();
     }
 

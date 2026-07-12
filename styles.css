@@ -1,20 +1,28 @@
 /* ==========================================================
    Comunidade Imersão Claude
-   Estética: liquid glass morphism sobre vídeo. Grayscale puro.
+   Paleta tirada do print de referência (lifeOS): degradê do
+   bege/areia para o laranja coral, texto grafite, botão escuro.
+
+   Pra mudar as cores do site inteiro, mexa só no :root.
    ========================================================== */
 
 :root {
   --radius: 1rem;
 
-  /* Escala de cinza — HSL 0 0% X%, sem nenhum acento colorido */
-  --preto:     hsl(0 0% 0%);
-  --grafite:   hsl(0 0% 4%);
-  --branco:    hsl(0 0% 100%);
+  /* --- Paleta --- */
+  --areia:          #E4DACE;  /* topo do degradê */
+  --creme:          #EFE5DB;
+  --laranja-suave:  #F0906A;  /* meio do degradê */
+  --laranja:        #F04E20;  /* base do degradê */
+  --laranja-forte:  #DC3F16;
+  --grafite:        #1B1A18;  /* texto e botão escuro */
+  --branco:         #FFFFFF;
 
-  --texto:      rgba(255,255,255,1);
-  --texto-80:   rgba(255,255,255,0.8);
-  --texto-60:   rgba(255,255,255,0.6);
-  --texto-50:   rgba(255,255,255,0.5);
+  /* --- Hierarquia de texto (grafite sobre fundo claro) --- */
+  --texto:      rgba(27, 26, 24, 1);
+  --texto-80:   rgba(27, 26, 24, 0.78);
+  --texto-60:   rgba(27, 26, 24, 0.60);
+  --texto-50:   rgba(27, 26, 24, 0.48);
 
   --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-serif:   "Source Serif 4", Georgia, serif;
@@ -26,10 +34,16 @@ html { scroll-behavior: smooth; }
 
 body {
   min-height: 100vh;
+  /* O degradê do print: areia em cima, laranja embaixo. Fixo, pra
+     não "escorrer" junto com a rolagem. */
   background:
-    radial-gradient(ellipse 60% 50% at 50% 42%, hsl(0 0% 11%) 0%, hsl(0 0% 3%) 70%),
-    hsl(0 0% 2%);
-  background-attachment: fixed;
+    linear-gradient(180deg,
+      var(--areia) 0%,
+      var(--creme) 18%,
+      var(--laranja-suave) 55%,
+      var(--laranja) 88%,
+      var(--laranja-forte) 100%
+    ) fixed;
   color: var(--texto);
   font-family: var(--font-display);
   font-weight: 400;
@@ -39,7 +53,6 @@ body {
 
 h1, h2, h3, h4 { font-weight: 500; letter-spacing: -0.03em; line-height: 1.1; }
 
-/* Serifada itálica: só dentro de headings/citações, como acento */
 h1 em, h2 em, h3 em, blockquote em {
   font-family: var(--font-serif);
   font-style: italic;
@@ -60,22 +73,19 @@ ul { list-style: none; }
   z-index: 0;
 }
 
-/* Vinheta: escurece as bordas e preserva o miolo luminoso,
-   dando contraste ao texto branco sem apagar as partículas. */
+/* Véu claro no miolo: dá respiro pro texto sem apagar o degradê. */
 .bg-scrim {
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   background: radial-gradient(
-    ellipse 70% 60% at 50% 45%,
-    rgba(0,0,0,0) 0%,
-    rgba(0,0,0,0.35) 55%,
-    rgba(0,0,0,0.75) 100%
+    ellipse 75% 65% at 50% 40%,
+    rgba(255,255,255,0.18) 0%,
+    rgba(255,255,255,0) 70%
   );
 }
 
-/* Contador, no canto inferior esquerdo */
 .bg-contador {
   position: fixed;
   left: 14px;
@@ -91,18 +101,16 @@ ul { list-style: none; }
 .split, .secao, .rodape { position: relative; z-index: 10; }
 
 /* ==========================================================
-   LIQUID GLASS — dois tiers
+   LIQUID GLASS — dois tiers, agora em versão CLARA
    Nenhum elemento usa `border`. A borda é 100% do ::before.
    ========================================================== */
 
-/* --- Tier leve --- */
 .liquid-glass {
-  background: rgba(255, 255, 255, 0.01);
-  background-blend-mode: luminosity;
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   border: none;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5);
   position: relative;
   overflow: hidden;
 }
@@ -115,12 +123,12 @@ ul { list-style: none; }
   padding: 1.4px;
   background: linear-gradient(
     180deg,
-    rgba(255,255,255,0.45) 0%,
-    rgba(255,255,255,0.15) 20%,
-    transparent 40%,
-    transparent 60%,
-    rgba(255,255,255,0.15) 80%,
-    rgba(255,255,255,0.45) 100%
+    rgba(255,255,255,0.9) 0%,
+    rgba(255,255,255,0.4) 20%,
+    rgba(255,255,255,0.1) 40%,
+    rgba(255,255,255,0.1) 60%,
+    rgba(255,255,255,0.4) 80%,
+    rgba(255,255,255,0.9) 100%
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -129,16 +137,14 @@ ul { list-style: none; }
   pointer-events: none;
 }
 
-/* --- Tier pesado (CTA / painéis) --- */
 .liquid-glass-strong {
-  background: rgba(255, 255, 255, 0.01);
-  background-blend-mode: luminosity;
-  -webkit-backdrop-filter: blur(50px);
-  backdrop-filter: blur(50px);
+  background: rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px);
   border: none;
   box-shadow:
-    4px 4px 4px rgba(0, 0, 0, 0.05),
-    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    0 8px 24px rgba(120, 50, 20, 0.10),
+    inset 0 1px 1px rgba(255, 255, 255, 0.6);
   position: relative;
   overflow: hidden;
 }
@@ -151,12 +157,12 @@ ul { list-style: none; }
   padding: 1.4px;
   background: linear-gradient(
     180deg,
-    rgba(255,255,255,0.5) 0%,
-    rgba(255,255,255,0.2) 20%,
-    transparent 40%,
-    transparent 60%,
-    rgba(255,255,255,0.2) 80%,
-    rgba(255,255,255,0.5) 100%
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,0.5) 20%,
+    rgba(255,255,255,0.15) 40%,
+    rgba(255,255,255,0.15) 60%,
+    rgba(255,255,255,0.5) 80%,
+    rgba(255,255,255,1) 100%
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -180,7 +186,7 @@ ul { list-style: none; }
 .ic-circulo {
   width: 32px; height: 32px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(27, 26, 24, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -199,14 +205,22 @@ ul { list-style: none; }
   white-space: nowrap;
   transition: transform 0.2s;
 }
-
-/* Rótulo longo: não pode espremer nem quebrar em duas linhas */
-.btn-conta { flex-shrink: 0; }
 button.pill, a.pill { cursor: pointer; }
 button.pill:hover, a.pill:hover { transform: scale(1.05); }
 
+/* Botão escuro, como o "Swipe to get started" do print */
+.btn-conta {
+  flex-shrink: 0;
+  padding: 11px 20px;
+  background: var(--grafite);
+  color: var(--branco);
+  box-shadow: 0 6px 18px rgba(60, 25, 10, 0.22);
+}
+.btn-conta::before { display: none; }  /* o botão sólido não usa borda de vidro */
+.btn-conta:hover { background: #000; }
+
 /* ==========================================================
-   SPLIT 52 / 48
+   ESTRUTURA
    ========================================================== */
 .split {
   display: flex;
@@ -230,7 +244,7 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.05em;
-  color: var(--branco);
+  color: var(--grafite);
 }
 
 .rotulo {
@@ -240,7 +254,6 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   color: var(--texto-50);
 }
 
-/* ---------- Painel principal (largura total) ---------- */
 .painel-dir {
   flex: 1;
   display: flex;
@@ -256,36 +269,18 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   gap: 12px;
 }
 
-/* --- Carrossel dentro do painel direito --- */
-/* Ocupa toda a altura que sobra abaixo da barra do topo e
-   centraliza os cards verticalmente, na altura do <h1>. */
+/* ==========================================================
+   CARROSSEL — faixa com rolagem horizontal
+   ========================================================== */
 .trilho-bloco {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 16px;
-  min-width: 0;   /* deixa o .trilho encolher e rolar de verdade */
+  min-width: 0;
 }
 
-/* ==========================================================
-   SEÇÕES ABAIXO DO HERO — agenda e materiais
-   ========================================================== */
-.secao {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 120px 3rem;
-}
-
-.secao h2 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  color: var(--branco);
-  margin: 8px 0 48px;
-}
-
-/* ==========================================================
-   CARROSSEL — arrasta pro lado, estilo Netflix
-   ========================================================== */
 .trilho-topo {
   display: flex;
   align-items: center;
@@ -293,24 +288,6 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   gap: 20px;
 }
 
-.trilho-setas { display: flex; gap: 10px; flex-shrink: 0; }
-
-.seta {
-  width: 38px; height: 38px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--texto-80);
-  transition: transform 0.2s, color 0.2s;
-}
-.seta:hover { transform: scale(1.05); color: var(--branco); }
-.seta-esq { transform: rotate(180deg); }
-/* As setas nunca ficam desabilitadas: com o loop infinito, sempre
-   há pra onde ir nos dois sentidos. */
-
-/* Rolagem horizontal com encaixe. A barra some, mas o scroll
-   por trackpad/dedo continua funcionando normalmente. */
 .trilho {
   display: flex;
   gap: 16px;
@@ -330,29 +307,24 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   border-radius: 1.75rem;
   display: flex;
   flex-direction: column;
-  overflow: hidden;         /* a capa encosta na borda do card */
+  overflow: hidden;
   transition: transform 0.25s;
 }
 .trilho-card:hover { transform: translateY(-6px) scale(1.02); }
 
-/* Capa: área da imagem do produto. Enquanto não há foto real,
-   um degradê com o asterisco em marca d'água. */
+/* Capa: área da imagem. Sem foto real ainda, um degradê laranja
+   com o asterisco branco em marca d'água. */
 .capa {
   position: relative;
   height: 175px;
   flex-shrink: 0;
   background:
     url("logo.svg") no-repeat center / 56px,
-    linear-gradient(150deg, hsl(0 0% 26%) 0%, hsl(0 0% 8%) 100%);
-  background-blend-mode: soft-light, normal;
+    linear-gradient(150deg, var(--laranja-suave) 0%, var(--laranja-forte) 100%);
   transition: filter 0.25s;
 }
-.trilho-card:hover .capa { filter: brightness(1.25); }
+.trilho-card:hover .capa { filter: brightness(1.08) saturate(1.1); }
 
-/* Se você trocar a capa por uma <img>, ela se encaixa sozinha.
-   O -webkit-user-drag é essencial: sem ele, arrastar o carrossel
-   em cima de uma imagem dispara o "arrastar imagem" nativo do
-   navegador e o gesto morre no meio. */
 .capa img {
   width: 100%;
   height: 100%;
@@ -360,16 +332,6 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   display: block;
   -webkit-user-drag: none;
   user-select: none;
-}
-
-/* Degradê no pé da capa: costura a imagem com o texto, em vez
-   de deixar um corte seco entre os dois. */
-.capa::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 55%;
-  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.75));
 }
 
 .trilho-corpo {
@@ -395,7 +357,7 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   gap: 12px;
   margin-top: 14px;
   padding-top: 14px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);  /* filete, sem usar border */
+  box-shadow: inset 0 1px 0 rgba(27, 26, 24, 0.12);
 }
 
 .trilho-meta { font-size: 0.75rem; color: var(--texto-50); }
@@ -411,7 +373,7 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 }
 
 /* ==========================================================
-   MURAL DA COMUNIDADE — compositor + feed
+   MURAL DA COMUNIDADE
    ========================================================== */
 .sr-only {
   position: absolute;
@@ -425,7 +387,7 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 .avatar {
   width: 38px; height: 38px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.12);
+  background: rgba(27, 26, 24, 0.10);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -435,7 +397,6 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   flex-shrink: 0;
 }
 
-/* --- Caixa de publicar --- */
 .compositor {
   padding: 20px;
   border-radius: 1.75rem;
@@ -483,30 +444,29 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   white-space: nowrap;
   transition: transform 0.2s, color 0.2s;
 }
-.chip:hover { transform: scale(1.05); color: var(--texto-80); }
+.chip:hover { transform: scale(1.05); color: var(--texto); }
 
 .enviar {
   width: 40px; height: 40px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.15);
+  background: var(--grafite);
   color: var(--branco);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: transform 0.2s, background 0.2s;
+  transition: transform 0.2s, opacity 0.2s;
 }
-.enviar:hover { transform: scale(1.05); background: rgba(255,255,255,0.25); }
-.enviar:disabled { opacity: 0.35; cursor: default; transform: none; }
+.enviar:hover { transform: scale(1.05); }
+.enviar:disabled { opacity: 0.3; cursor: default; transform: none; }
 
 .mural-aviso {
   margin: 14px 0 40px;
   font-size: 0.75rem;
-  color: var(--texto-50);
+  color: var(--texto-60);
   line-height: 1.5;
 }
 
-/* --- Feed --- */
 .feed { display: flex; flex-direction: column; gap: 14px; }
 
 .post {
@@ -530,7 +490,7 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 .post-corpo > p {
   font-size: 0.9rem;
   color: var(--texto-80);
-  overflow-wrap: anywhere;   /* link gigante não estoura o card */
+  overflow-wrap: anywhere;
 }
 
 .post-anexos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
@@ -543,6 +503,21 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   border-radius: 999px;
   font-size: 0.72rem;
   color: var(--texto-60);
+}
+
+/* ==========================================================
+   SEÇÕES
+   ========================================================== */
+.secao {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 120px 3rem;
+}
+
+.secao h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--grafite);
+  margin: 8px 0 48px;
 }
 
 /* --- Agenda --- */
@@ -566,9 +541,9 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   min-width: 60px;
   padding: 10px;
   border-radius: 0.9rem;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.45);
 }
-.dia { font-size: 1.5rem; font-weight: 500; line-height: 1; color: var(--branco); }
+.dia { font-size: 1.5rem; font-weight: 500; line-height: 1; color: var(--laranja-forte); }
 .mes { font-size: 0.65rem; letter-spacing: 0.12em; color: var(--texto-50); margin-top: 4px; }
 
 .evento-info { flex: 1; }
@@ -583,7 +558,7 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   text-transform: uppercase;
   padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.15);
+  background: var(--grafite);
   color: var(--branco);
   white-space: nowrap;
 }
@@ -619,16 +594,13 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 .rodape {
   text-align: center;
   padding: 70px 24px 90px;
-  color: var(--texto-50);
+  color: var(--texto-60);
   font-size: 0.85rem;
 }
-.rodape-nota { margin-top: 5px; font-size: 0.75rem; opacity: 0.7; }
+.rodape-nota { margin-top: 5px; font-size: 0.75rem; opacity: 0.75; }
 
 /* ==========================================================
    RESPONSIVO
-   O painel principal NÃO pode ser escondido em tela pequena:
-   depois que o painel esquerdo saiu, ele é o único conteúdo
-   do topo — escondê-lo deixaria a página abrir vazia no celular.
    ========================================================== */
 @media (max-width: 1024px) {
   .split { padding: 2rem; }
@@ -638,13 +610,11 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   .split { padding: 1.75rem; }
   .secao { padding: 80px 1.5rem; }
 
-  /* Card fixo em 320px encostaria nas bordas do celular.
-     Proporcional à tela, sobra a prévia do próximo card —
-     que é o que avisa "dá pra arrastar". */
+  /* Card fixo em 320px encostaria nas bordas do celular */
   .trilho-card { flex: 0 0 78vw; }
   .capa { height: 150px; }
 
-  /* Rótulo longo demais pro topo: a barra vira duas linhas */
+  .nav { flex-wrap: wrap; gap: 12px; }
   .barra-topo { justify-content: flex-start; }
 
   .evento { flex-wrap: wrap; gap: 14px; }
