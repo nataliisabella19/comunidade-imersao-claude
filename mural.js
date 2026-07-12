@@ -195,15 +195,15 @@
 
 /* ---------------- Mural do aluno — feed ---------------- */
 (function () {
-  const campo    = document.getElementById("campo-post");
-  const nomeIn   = document.getElementById("campo-nome");
-  const linkIn   = document.getElementById("campo-link");
-  const linkBox  = document.getElementById("campo-link-caixa");
-  const chipLink = document.getElementById("chip-link");
-  const botao    = document.getElementById("btn-publicar");
-  const feed     = document.getElementById("feed");
+  const campo     = document.getElementById("campo-post");
+  const nomeIn    = document.getElementById("campo-nome");
+  const linkIn    = document.getElementById("campo-link");
+  const linkBox   = document.getElementById("campo-link-caixa");
+  const chipLink  = document.getElementById("chip-link");
+  const botao     = document.getElementById("btn-publicar");
+  const feed      = document.getElementById("feed");
   const meuAvatar = document.getElementById("meu-avatar");
-  const chips    = document.querySelectorAll(".chip[data-tag]");
+  const chips     = document.querySelectorAll(".chip[data-tag]");
   if (!campo || !botao || !feed) return;
 
   const CHAVE_POSTS = "mural-imersao-claude";
@@ -211,52 +211,100 @@
 
   let tag = "";
 
-  /* ---------- Utilidades ---------- */
+  /* ================= Utilidades ================= */
 
-  // Iniciais pro avatar: "Marina Julia" -> "MJ"
+  // "Marina Julia" -> "MJ"
   function iniciais(nome) {
     const p = nome.trim().split(/\s+/).filter(Boolean);
     if (!p.length) return "?";
     return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
   }
 
-  /* Só aceita http/https. Um href com "javascript:" viraria execução
-     de código ao clique — é o buraco clássico de feed com link. */
+  /* Só http/https. Um href "javascript:..." viraria execução de
+     código no clique de quem lê — é o buraco clássico de feed. */
   function urlSegura(bruta) {
     if (!bruta) return null;
-    let texto = bruta.trim();
+    let texto = String(bruta).trim();
     if (!texto) return null;
     if (!/^https?:\/\//i.test(texto)) texto = "https://" + texto;
     try {
       const u = new URL(texto);
-      if (u.protocol !== "http:" && u.protocol !== "https:") return null;
-      return u;
-    } catch {
-      return null;
-    }
+      return (u.protocol === "http:" || u.protocol === "https:") ? u : null;
+    } catch { return null; }
   }
 
-  function quandoAgora() {
-    return new Date().toLocaleString("pt-BR", {
+  const quandoAgora = () =>
+    new Date().toLocaleString("pt-BR", {
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
     });
-  }
 
-  /* ---------- Montagem do post ----------
-     Tudo via DOM e textContent, nunca innerHTML. Se alguém digitar
-     "<script>", tem que aparecer como texto na tela — não rodar. */
+  /* Id único do post. Sem isso não dá pra editar nem excluir: dois
+     posts com o mesmo texto seriam indistinguíveis na hora de achar
+     qual apagar. */
+  let contador = 0;
+  const novoId = () => `${Date.now()}-${contador++}`;
+
   function iconeSvg(id, classe) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
     svg.setAttribute("class", classe);
-    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    const use = document.createElementNS(ns, "use");
     use.setAttribute("href", "#" + id);
     svg.appendChild(use);
     return svg;
   }
 
+  function botaoAcao(classe, icone, rotulo, texto) {
+    const b = document.createElement("button");
+    b.className = classe;
+    b.type = "button";
+    b.setAttribute("aria-label", rotulo);
+    b.append(iconeSvg(icone, "ic ic-sm"));
+    if (texto !== undefined) {
+      const s = document.createElement("span");
+      s.textContent = texto;
+      b.append(s);
+    }
+    return b;
+  }
+
+  /* ================= Persistência (só neste navegador!) ========= */
+  function lerSalvos() {
+    try {
+      const bruto = localStorage.getItem(CHAVE_POSTS);
+      const lista = bruto ? JSON.parse(bruto) : [];
+      return Array.isArray(lista) ? lista : [];
+    } catch {
+      // localStorage bloqueado (aba anônima) ou JSON corrompido: o
+      // mural degrada pra só-leitura em vez de quebrar a página.
+      return [];
+    }
+  }
+
+  function salvar(lista) {
+    try { localStorage.setItem(CHAVE_POSTS, JSON.stringify(lista)); }
+    catch { /* sem espaço ou sem permissão */ }
+  }
+
+  function atualizarSalvo(id, mudancas) {
+    const lista = lerSalvos();
+    const i = lista.findIndex((p) => p.id === id);
+    if (i === -1) return;
+    lista[i] = { ...lista[i], ...mudancas };
+    salvar(lista);
+  }
+
+  function removerSalvo(id) {
+    salvar(lerSalvos().filter((p) => p.id !== id));
+  }
+
+  /* ================= Montagem do post =================
+     Tudo via DOM e textContent, nunca innerHTML. Se alguém digitar
+     "<script>", tem que virar texto na tela — não código rodando. */
   function criarPost(p) {
     const art = document.createElement("article");
     art.className = "post liquid-glass";
+    art.dataset.id = p.id;
 
     const av = document.createElement("span");
     av.className = "avatar";
@@ -265,6 +313,7 @@
     const corpo = document.createElement("div");
     corpo.className = "post-corpo";
 
+    // --- Cabeçalho ---
     const topo = document.createElement("div");
     topo.className = "post-topo";
 
@@ -281,14 +330,16 @@
 
     const hora = document.createElement("span");
     hora.className = "post-hora";
-    hora.textContent = p.quando;
+    hora.textContent = p.quando + (p.editado ? " · editado" : "");
     topo.append(hora);
 
+    // --- Texto ---
     const texto = document.createElement("p");
+    texto.className = "post-texto";
     texto.textContent = p.texto;
-
     corpo.append(topo, texto);
 
+    // --- Link ---
     const u = urlSegura(p.link);
     if (u) {
       const a = document.createElement("a");
@@ -302,77 +353,150 @@
       corpo.append(a);
     }
 
+    // --- Ações ---
     const acoes = document.createElement("div");
     acoes.className = "post-acoes";
-    const curtir = document.createElement("button");
-    curtir.className = "acao";
-    curtir.type = "button";
-    curtir.dataset.curtidas = "0";
-    const cont = document.createElement("span");
-    cont.textContent = "0";
-    curtir.append(iconeSvg("i-coracao", "ic ic-sm"), cont);
-    acoes.append(curtir);
-    corpo.append(acoes);
 
+    const curtir = botaoAcao("acao js-curtir", "i-coracao", "Curtir", "0");
+    curtir.dataset.curtidas = "0";
+    acoes.append(curtir);
+
+    /* Editar e excluir só nos posts DESTE navegador. Não faz sentido
+       oferecer "excluir" num post que a pessoa não escreveu — e, com
+       backend, o servidor terá que reforçar isso de verdade. */
+    if (p.meu) {
+      const espaco = document.createElement("span");
+      espaco.className = "acoes-espaco";
+      acoes.append(
+        espaco,
+        botaoAcao("acao js-editar", "i-lapis", "Editar post"),
+        botaoAcao("acao acao-perigo js-excluir", "i-lixeira", "Excluir post")
+      );
+    }
+
+    corpo.append(acoes);
     art.append(av, corpo);
     return art;
   }
 
-  /* ---------- Curtir (delegado: pega inclusive os posts novos) ---------- */
-  feed.addEventListener("click", (e) => {
-    const btn = e.target.closest(".acao");
-    if (!btn) return;
+  /* ================= Edição no lugar ================= */
+  function abrirEdicao(art) {
+    if (art.querySelector(".post-editor")) return;   // já está editando
 
-    const curtido = btn.dataset.curtido === "1";
-    const base = Number(btn.dataset.curtidas || 0);
-    btn.dataset.curtido = curtido ? "0" : "1";
-    const span = btn.querySelector("span");
-    if (span) span.textContent = String(base + (curtido ? 0 : 1));
+    const texto = art.querySelector(".post-texto");
+    const acoes = art.querySelector(".post-acoes");
+    if (!texto || !acoes) return;
+
+    const editor = document.createElement("textarea");
+    editor.className = "post-editor";
+    editor.value = texto.textContent;
+    editor.rows = 1;
+
+    const barra = document.createElement("div");
+    barra.className = "editor-barra";
+
+    const salvarBtn   = botaoAcao("acao js-salvar", "i-check", "Salvar", "Salvar");
+    const cancelarBtn = botaoAcao("acao js-cancelar", "i-x", "Cancelar", "Cancelar");
+    barra.append(salvarBtn, cancelarBtn);
+
+    texto.hidden = true;
+    acoes.hidden = true;
+    texto.after(editor, barra);
+
+    // O textarea cresce com o conteúdo em vez de virar caixinha
+    // com rolagem interna.
+    const crescer = () => {
+      editor.style.height = "auto";
+      editor.style.height = editor.scrollHeight + "px";
+    };
+    editor.addEventListener("input", crescer);
+    crescer();
+    editor.focus();
+    editor.setSelectionRange(editor.value.length, editor.value.length);
+
+    editor.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") fecharEdicao(art, false);
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); fecharEdicao(art, true); }
+    });
+  }
+
+  function fecharEdicao(art, confirmar) {
+    const editor = art.querySelector(".post-editor");
+    const barra  = art.querySelector(".editor-barra");
+    const texto  = art.querySelector(".post-texto");
+    const acoes  = art.querySelector(".post-acoes");
+    const hora   = art.querySelector(".post-hora");
+    if (!editor || !texto) return;
+
+    const novo = editor.value.trim();
+
+    // Salvar com o campo vazio apagaria o post sem a pessoa pedir.
+    // Nesse caso, trata como cancelar.
+    if (confirmar && novo) {
+      texto.textContent = novo;
+      atualizarSalvo(art.dataset.id, { texto: novo, editado: true });
+      if (hora && !hora.textContent.includes("editado")) {
+        hora.textContent += " · editado";
+      }
+    }
+
+    editor.remove();
+    if (barra) barra.remove();
+    texto.hidden = false;
+    if (acoes) acoes.hidden = false;
+  }
+
+  /* ================= Cliques no feed (delegados) =================
+     Um só ouvinte no feed cobre também os posts criados depois —
+     ligar ouvinte em cada botão deixaria os novos posts mudos. */
+  feed.addEventListener("click", (e) => {
+    const art = e.target.closest(".post");
+    if (!art) return;
+
+    if (e.target.closest(".js-curtir")) {
+      const btn = e.target.closest(".js-curtir");
+      const curtido = btn.dataset.curtido === "1";
+      const base = Number(btn.dataset.curtidas || 0);
+      btn.dataset.curtido = curtido ? "0" : "1";
+      const span = btn.querySelector("span");
+      if (span) span.textContent = String(base + (curtido ? 0 : 1));
+      return;
+    }
+
+    if (e.target.closest(".js-editar"))   { abrirEdicao(art); return; }
+    if (e.target.closest(".js-salvar"))   { fecharEdicao(art, true); return; }
+    if (e.target.closest(".js-cancelar")) { fecharEdicao(art, false); return; }
+
+    if (e.target.closest(".js-excluir")) {
+      // Excluir é irreversível e não há "desfazer": confirma antes.
+      if (!confirm("Excluir este post? Não dá pra desfazer.")) return;
+      removerSalvo(art.dataset.id);
+      art.remove();
+    }
   });
 
-  /* ---------- Estado do formulário ---------- */
-  function podePublicar() {
-    return campo.value.trim().length > 0 && nomeIn.value.trim().length > 0;
-  }
+  /* ================= Formulário ================= */
+  const podePublicar = () =>
+    campo.value.trim().length > 0 && nomeIn.value.trim().length > 0;
 
-  function atualizarBotao() {
-    botao.disabled = !podePublicar();
-  }
+  const atualizarBotao = () => { botao.disabled = !podePublicar(); };
 
   function ajustarAltura() {
     campo.style.height = "auto";
     campo.style.height = campo.scrollHeight + "px";
   }
 
-  /* ---------- Persistência (só neste navegador!) ---------- */
-  function lerSalvos() {
-    try {
-      const bruto = localStorage.getItem(CHAVE_POSTS);
-      const lista = bruto ? JSON.parse(bruto) : [];
-      return Array.isArray(lista) ? lista : [];
-    } catch {
-      // localStorage bloqueado (aba anônima) ou JSON corrompido: o
-      // mural degrada pra só-leitura em vez de quebrar a página.
-      return [];
-    }
-  }
-
-  function salvar(lista) {
-    try {
-      localStorage.setItem(CHAVE_POSTS, JSON.stringify(lista));
-    } catch { /* sem espaço ou sem permissão */ }
-  }
-
-  /* ---------- Publicar ---------- */
   function publicar() {
     if (!podePublicar()) return;
 
     const p = {
-      nome:  nomeIn.value.trim(),
+      id: novoId(),
+      nome: nomeIn.value.trim(),
       texto: campo.value.trim(),
       tag,
-      link:  linkIn ? linkIn.value.trim() : "",
+      link: linkIn ? linkIn.value.trim() : "",
       quando: quandoAgora(),
+      meu: true,
     };
 
     feed.prepend(criarPost(p));
@@ -383,8 +507,7 @@
 
     try { localStorage.setItem(CHAVE_NOME, p.nome); } catch {}
 
-    // Limpa o formulário, mas mantém o nome: a pessoa não deve ter
-    // que redigitar quem ela é a cada post.
+    // Limpa tudo menos o nome: ninguém deve redigitar quem é a cada post.
     campo.value = "";
     if (linkIn) linkIn.value = "";
     if (linkBox) linkBox.hidden = true;
@@ -396,11 +519,10 @@
     atualizarBotao();
   }
 
-  /* ---------- Ligações ---------- */
   chips.forEach((chip) => {
     chip.addEventListener("click", () => {
       const nova = chip.dataset.tag;
-      tag = tag === nova ? "" : nova;       // clicar de novo desmarca
+      tag = tag === nova ? "" : nova;              // clicar de novo desmarca
       chips.forEach((c) => (c.dataset.ativo = c.dataset.tag === tag ? "1" : "0"));
     });
   });
@@ -418,18 +540,13 @@
     atualizarBotao();
     if (meuAvatar) meuAvatar.textContent = iniciais(nomeIn.value);
   });
-
   botao.addEventListener("click", publicar);
 
-  // Enter publica; Shift+Enter quebra linha.
   campo.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      publicar();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); publicar(); }
   });
 
-  /* ---------- Restaura o que já existia ---------- */
+  /* ================= Restaura o que já existia ================= */
   try {
     const salvo = localStorage.getItem(CHAVE_NOME);
     if (salvo) {
@@ -438,7 +555,17 @@
     }
   } catch {}
 
-  lerSalvos().reverse().forEach((p) => feed.prepend(criarPost(p)));
+  /* Posts antigos (gravados antes de existir id) não teriam como ser
+     editados nem excluídos. Em vez de deixá-los presos pra sempre,
+     dou um id a eles na primeira carga. */
+  const salvos = lerSalvos();
+  let precisaRegravar = false;
+  salvos.forEach((p) => {
+    if (!p.id) { p.id = novoId(); p.meu = true; precisaRegravar = true; }
+  });
+  if (precisaRegravar) salvar(salvos);
+
+  salvos.slice().reverse().forEach((p) => feed.prepend(criarPost(p)));
 
   atualizarBotao();
 })();

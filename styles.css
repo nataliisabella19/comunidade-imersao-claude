@@ -717,6 +717,39 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 .acao[data-curtido="1"] { color: var(--laranja-forte); }
 .acao[data-curtido="1"] .ic { fill: currentColor; }
 
+/* Empurra editar/excluir pra direita, separando do curtir */
+.acoes-espaco { flex: 1; }
+
+/* Excluir é destrutivo: só fica vermelho no hover, pra não gritar
+   o tempo todo nem virar um botão convidativo de apertar sem querer. */
+.acao-perigo:hover {
+  color: #C0341A;
+  background: rgba(192, 52, 26, 0.10);
+}
+
+/* --- Editor inline --- */
+.post-editor {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 14px;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  box-shadow: inset 0 0 0 1px rgba(27, 26, 24, 0.12);
+}
+
+.editor-barra { display: flex; gap: 8px; margin-top: 10px; }
+.editor-barra .acao { background: rgba(27, 26, 24, 0.06); color: var(--texto-80); }
+.editor-barra .js-salvar { background: var(--grafite); color: var(--branco); }
+.editor-barra .js-salvar:hover { background: #000; color: var(--branco); }
+
 /* ==========================================================
    SEÇÕES
    ========================================================== */
