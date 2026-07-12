@@ -295,95 +295,120 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   scrollbar-width: none;
-  padding: 4px;             /* respiro pro ::before da borda não ser cortado */
-  margin: -4px;
+
+  /* overflow-x: auto força o eixo Y a recortar. Sem esse respiro,
+     a sombra projetada do card e o levantar do hover seriam
+     decapitados pela borda da faixa. */
+  padding: 16px 4px 54px;
+  margin: -16px -4px -34px;
 }
 .trilho::-webkit-scrollbar { display: none; }
 
-/* --- Card grande, formato vitrine de loja, acabamento espelhado --- */
+/* ==========================================================
+   CARD = BLOCO DE VIDRO GROSSO (referência do print)
+
+   O que faz ele parecer um objeto sólido de vidro, e não um
+   retângulo translúcido:
+   1. Cantos MUITO arredondados (squircle), quase uma bolha.
+   2. Um bisel grosso nas quatro bordas — várias sombras internas
+      que simulam a espessura refratando a luz.
+   3. Glints quentes correndo no topo e na base, que são a luz
+      atravessando o vidro (as cáusticas do print).
+   4. Um glow difuso no miolo, como se a peça fosse iluminada
+      por dentro.
+   ========================================================== */
 .trilho-card {
   flex: 0 0 320px;
   scroll-snap-align: start;
-  border-radius: 1.75rem;
+  border-radius: 2.5rem;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: transform 0.25s;
-}
-.trilho-card:hover { transform: translateY(-6px) scale(1.02); }
+  transition: transform 0.3s, box-shadow 0.3s;
 
-/* Capa: área da imagem. Sem foto real ainda, um degradê laranja
-   com o asterisco branco em marca d'água. */
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 62%, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0) 70%),
+    linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.13) 45%, rgba(255,255,255,0.26) 100%);
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
+  backdrop-filter: blur(14px) saturate(1.35);
+
+  box-shadow:
+    /* fio de luz contornando toda a peça */
+    inset 0 0 0 1px rgba(255,255,255,0.55),
+    /* bisel: topo e base grossos, laterais afinando pra dentro */
+    inset 0 4px 7px -1px rgba(255,255,255,0.95),
+    inset 0 -4px 7px -1px rgba(255,255,255,0.80),
+    inset 14px 0 26px -16px rgba(255,255,255,0.95),
+    inset -14px 0 26px -16px rgba(255,255,255,0.95),
+    /* iluminação interna difusa */
+    inset 0 0 70px rgba(255,255,255,0.22),
+    /* a peça flutua sobre o fundo */
+    0 26px 50px -20px rgba(120, 48, 18, 0.40);
+}
+.trilho-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.7),
+    inset 0 4px 7px -1px rgba(255,255,255,1),
+    inset 0 -4px 7px -1px rgba(255,255,255,0.9),
+    inset 14px 0 26px -16px rgba(255,255,255,1),
+    inset -14px 0 26px -16px rgba(255,255,255,1),
+    inset 0 0 70px rgba(255,255,255,0.3),
+    0 34px 60px -20px rgba(120, 48, 18, 0.45);
+}
+
+/* Glints: as cáusticas quentes do print, correndo no topo e na
+   base. Substituem a borda-gradiente padrão do .liquid-glass —
+   por isso a máscara dele precisa ser desligada aqui. */
+.trilho-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  padding: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  -webkit-mask: none;
+  mask: none;
+  background:
+    linear-gradient(90deg,
+      transparent 10%,
+      rgba(255, 209, 160, 0.85) 26%,
+      rgba(255, 255, 255, 1) 50%,
+      rgba(255, 200, 150, 0.8) 74%,
+      transparent 90%
+    ) top / 100% 3px no-repeat,
+    linear-gradient(90deg,
+      transparent 16%,
+      rgba(255, 176, 120, 0.75) 34%,
+      rgba(255, 236, 214, 0.95) 55%,
+      rgba(255, 190, 140, 0.6) 76%,
+      transparent 88%
+    ) bottom / 100% 3px no-repeat;
+  filter: blur(1.5px);
+}
+
+/* Capa: agora é o miolo do vidro, não um bloco laranja opaco.
+   Uma foto colocada aqui aparece POR TRÁS do vidro. */
 .capa {
   position: relative;
   height: 175px;
   flex-shrink: 0;
   overflow: hidden;
   background:
-    url("logo.svg") no-repeat center / 56px,
-    linear-gradient(150deg, var(--laranja-suave) 0%, var(--laranja-forte) 100%);
-  transition: filter 0.25s;
+    url("logo.svg") no-repeat center / 54px,
+    radial-gradient(ellipse 70% 70% at 50% 45%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.05) 75%),
+    linear-gradient(160deg, rgba(240, 144, 106, 0.55) 0%, rgba(240, 78, 32, 0.35) 100%);
+  transition: filter 0.3s;
 }
-.trilho-card:hover .capa { filter: brightness(1.08) saturate(1.1); }
-
-/* A lente: bolha de vidro circular e difusa sobre a capa, como no
-   print de referência. Fica atrás do conteúdo do card. */
-.capa::before {
-  content: "";
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  top: 52%;
-  width: 168px;
-  height: 168px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 35% 30%,
-    rgba(255,255,255,0.45) 0%,
-    rgba(255,255,255,0.18) 45%,
-    rgba(255,255,255,0.06) 70%,
-    rgba(255,255,255,0) 100%
-  );
-  -webkit-backdrop-filter: blur(7px) saturate(1.15);
-  backdrop-filter: blur(7px) saturate(1.15);
-  box-shadow:
-    inset 0 1px 1px rgba(255,255,255,0.55),
-    0 8px 22px rgba(90, 35, 12, 0.18);
-  transition: transform 0.45s ease;
-}
-.trilho-card:hover .capa::before { transform: translate(-50%, -50%) scale(1.08); }
-
-/* Reflexo especular: a faixa de luz que atravessa o vidro na
-   diagonal — é o que faz a superfície ler como espelhada, e não
-   como um retângulo fosco. Fica só sobre a CAPA, de propósito:
-   se cruzasse o card inteiro, passaria por cima do título e
-   lavaria o texto no hover. No hover ela desliza, como luz
-   correndo pelo vidro. */
-.capa::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  background: linear-gradient(
-    115deg,
-    rgba(255,255,255,0) 30%,
-    rgba(255,255,255,0.38) 45%,
-    rgba(255,255,255,0.12) 52%,
-    rgba(255,255,255,0) 66%
-  );
-  background-size: 250% 100%;
-  background-position: 100% 0;
-  transition: background-position 0.7s ease;
-}
-.trilho-card:hover .capa::after { background-position: 0 0; }
+.trilho-card:hover .capa { filter: brightness(1.06); }
 
 .capa img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0.9;              /* deixa o vidro por cima respirar */
   -webkit-user-drag: none;
   user-select: none;
 }
