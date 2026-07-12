@@ -135,5 +135,19 @@ create trigger posts_intervalo
 -- ==========================================================
 -- TEMPO REAL: o post de um aluno aparece na tela dos outros sem
 -- ninguém precisar recarregar a página.
+--
+-- O `if not exists` é necessário: um simples "add table" explode
+-- se a tabela já estiver na publicação, e isso faria o script
+-- inteiro falhar quando rodado uma segunda vez.
 -- ==========================================================
-alter publication supabase_realtime add table posts;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'posts'
+  ) then
+    alter publication supabase_realtime add table posts;
+  end if;
+end $$;
