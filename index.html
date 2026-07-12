@@ -30,7 +30,6 @@
   <symbol id="i-wand" viewBox="0 0 24 24"><path d="m21.6 3.6-1.3-1.3a1.2 1.2 0 0 0-1.7 0L2.4 18.6a1.2 1.2 0 0 0 0 1.7l1.3 1.3a1.2 1.2 0 0 0 1.7 0L21.6 5.4a1.2 1.2 0 0 0 0-1.8"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
   <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
-  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
   <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
   <symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
@@ -106,99 +105,65 @@
       </a>
     </div>
 
-    <div class="card-comunidade liquid-glass">
-      <h3>Entre no nosso ecossistema</h3>
-      <p>Uma turma que troca prompt, revisa código e constrói junto — toda semana.</p>
-    </div>
-
-    <div class="destaque liquid-glass">
-      <div class="destaque-linha">
-        <article class="mini liquid-glass">
-          <span class="ic-circulo"><svg class="ic ic-sm"><use href="#i-wand"/></svg></span>
-          <h4>Encontros</h4>
-          <p>Ao vivo, toda semana.</p>
-        </article>
-        <article class="mini liquid-glass">
-          <span class="ic-circulo"><svg class="ic ic-sm"><use href="#i-book"/></svg></span>
-          <h4>Acervo</h4>
-          <p>Gravações e prompts.</p>
-        </article>
+    <!-- ======================================================
+         CARROSSEL (estilo Netflix — arrasta pro lado)
+         COMO EDITAR: copie um bloco <article class="trilho-card">
+         e troque a tag, o título e a descrição.
+         ====================================================== -->
+    <div class="trilho-bloco">
+      <div class="trilho-topo">
+        <p class="rotulo">EM DESTAQUE</p>
+        <div class="trilho-setas">
+          <button class="seta liquid-glass" type="button" data-dir="-1" aria-label="Voltar">
+            <svg class="ic ic-sm seta-esq"><use href="#i-arrow-right"/></svg>
+          </button>
+          <button class="seta liquid-glass" type="button" data-dir="1" aria-label="Avançar">
+            <svg class="ic ic-sm"><use href="#i-arrow-right"/></svg>
+          </button>
+        </div>
       </div>
 
-      <article class="destaque-card liquid-glass">
-        <img src="thumb.svg" alt="" width="96" height="64">
-        <div class="destaque-txt">
-          <h4>Projetos da turma</h4>
-          <p>O que a comunidade já colocou no ar.</p>
-        </div>
-        <button class="btn-mais" type="button" aria-label="Ver projetos">
-          <svg class="ic ic-sm"><use href="#i-plus"/></svg>
-        </button>
-      </article>
+      <div class="trilho" id="trilho">
+        <article class="trilho-card liquid-glass">
+          <span class="trilho-tag">AULA 01</span>
+          <h3>Fundamentos do Claude</h3>
+          <p>Como o modelo pensa e por que prompt bom não é prompt comprido.</p>
+        </article>
+
+        <article class="trilho-card liquid-glass">
+          <span class="trilho-tag">AULA 02</span>
+          <h3>Claude Code no terminal</h3>
+          <p>Instalação, primeiros comandos e o primeiro projeto rodando.</p>
+        </article>
+
+        <article class="trilho-card liquid-glass">
+          <span class="trilho-tag">AULA 03</span>
+          <h3>Do zero ao ar</h3>
+          <p>Publicando um projeto real na internet, do jeito que fizemos aqui.</p>
+        </article>
+
+        <article class="trilho-card liquid-glass">
+          <span class="trilho-tag">AULA 04</span>
+          <h3>Contexto e memória</h3>
+          <p>Ensinando o Claude a conhecer o seu projeto de verdade.</p>
+        </article>
+
+        <article class="trilho-card liquid-glass">
+          <span class="trilho-tag">AULA 05</span>
+          <h3>Automação</h3>
+          <p>Tarefas repetitivas que você nunca mais faz na mão.</p>
+        </article>
+
+        <article class="trilho-card liquid-glass">
+          <span class="trilho-tag">BÔNUS</span>
+          <h3>Vitrine da turma</h3>
+          <p>Os projetos que a comunidade já colocou no ar.</p>
+        </article>
+      </div>
     </div>
 
   </aside>
 </div>
-
-<!-- ==========================================================
-     CARROSSEL (estilo Netflix — arrasta pro lado)
-     COMO EDITAR: copie um bloco <article class="trilho-card">
-     e troque a tag, o título e a descrição.
-     ========================================================== -->
-<section class="secao" id="destaques">
-  <div class="trilho-topo">
-    <div>
-      <p class="rotulo">EM DESTAQUE</p>
-      <h2>Explore a imersão</h2>
-    </div>
-    <div class="trilho-setas">
-      <button class="seta liquid-glass" type="button" data-dir="-1" aria-label="Voltar">
-        <svg class="ic ic-sm seta-esq"><use href="#i-arrow-right"/></svg>
-      </button>
-      <button class="seta liquid-glass" type="button" data-dir="1" aria-label="Avançar">
-        <svg class="ic ic-sm"><use href="#i-arrow-right"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <div class="trilho" id="trilho">
-    <article class="trilho-card liquid-glass">
-      <span class="trilho-tag">AULA 01</span>
-      <h3>Fundamentos do Claude</h3>
-      <p>Como o modelo pensa e por que prompt bom não é prompt comprido.</p>
-    </article>
-
-    <article class="trilho-card liquid-glass">
-      <span class="trilho-tag">AULA 02</span>
-      <h3>Claude Code no terminal</h3>
-      <p>Instalação, primeiros comandos e o primeiro projeto rodando.</p>
-    </article>
-
-    <article class="trilho-card liquid-glass">
-      <span class="trilho-tag">AULA 03</span>
-      <h3>Do zero ao ar</h3>
-      <p>Publicando um projeto real na internet, do jeito que fizemos aqui.</p>
-    </article>
-
-    <article class="trilho-card liquid-glass">
-      <span class="trilho-tag">AULA 04</span>
-      <h3>Contexto e memória</h3>
-      <p>Ensinando o Claude a conhecer o seu projeto de verdade.</p>
-    </article>
-
-    <article class="trilho-card liquid-glass">
-      <span class="trilho-tag">AULA 05</span>
-      <h3>Automação</h3>
-      <p>Tarefas repetitivas que você nunca mais precisa fazer na mão.</p>
-    </article>
-
-    <article class="trilho-card liquid-glass">
-      <span class="trilho-tag">BÔNUS</span>
-      <h3>Vitrine da turma</h3>
-      <p>Os projetos que a comunidade já colocou no ar.</p>
-    </article>
-  </div>
-</section>
 
 <!-- ==========================================================
      MURAL DA COMUNIDADE — o "chat" onde a turma publica
