@@ -9,35 +9,124 @@
    Pra virar um mural de verdade, precisa de um backend.
    ========================================================== */
 
-/* ---------------- Carrossel ---------------- */
+/* ---------------- Carrossel: loop infinito + arrastar ---------------- */
 (function () {
   const trilho = document.getElementById("trilho");
   if (!trilho) return;
 
   const setas = document.querySelectorAll(".seta");
+  const originais = Array.from(trilho.children);
+  if (!originais.length) return;
 
-  function rolar(dir) {
-    // Rola ~85% da largura visível: sobra uma "prévia" do próximo
-    // card, que é o que sinaliza pro usuário que há mais conteúdo.
-    trilho.scrollBy({ left: dir * trilho.clientWidth * 0.85, behavior: "smooth" });
-  }
+  /* ---------- Loop infinito ----------
+     O truque: triplico os cards. O usuário sempre navega no bloco
+     do MEIO. Quando ele encosta no bloco da esquerda ou da direita,
+     eu teletransporto o scroll de volta pro meio — um salto exato
+     de uma "volta" inteira, então visualmente nada muda. É por isso
+     que a fita nunca "bate" no fim: ela não tem fim.
 
-  setas.forEach((btn) => {
-    btn.addEventListener("click", () => rolar(Number(btn.dataset.dir)));
-  });
-
-  // Desabilita a seta quando não há mais pra onde ir.
-  function atualizarSetas() {
-    const fim = trilho.scrollWidth - trilho.clientWidth - 2;
-    setas.forEach((btn) => {
-      const dir = Number(btn.dataset.dir);
-      btn.disabled = dir < 0 ? trilho.scrollLeft <= 2 : trilho.scrollLeft >= fim;
+     Os clones são aria-hidden: pro leitor de tela, os cards
+     continuam existindo uma vez só. */
+  function clonar() {
+    originais.forEach((el) => {
+      const antes = el.cloneNode(true);
+      const depois = el.cloneNode(true);
+      antes.setAttribute("aria-hidden", "true");
+      depois.setAttribute("aria-hidden", "true");
+      trilho.prepend(antes);
+      trilho.append(depois);
     });
   }
 
-  trilho.addEventListener("scroll", atualizarSetas, { passive: true });
-  window.addEventListener("resize", atualizarSetas);
-  atualizarSetas();
+  // Largura de UMA volta (o conjunto original de cards + gaps)
+  function voltaLarga() {
+    return trilho.scrollWidth / 3;
+  }
+
+  // Salto instantâneo: precisa desligar o scroll suave e o encaixe,
+  // senão o navegador anima o teletransporte e a costura fica visível.
+  function saltar(delta) {
+    const snap = trilho.style.scrollSnapType;
+    trilho.style.scrollBehavior = "auto";
+    trilho.style.scrollSnapType = "none";
+    trilho.scrollLeft += delta;
+    trilho.offsetHeight; // força o navegador a aplicar antes de religar
+    trilho.style.scrollBehavior = "";
+    trilho.style.scrollSnapType = snap;
+  }
+
+  function recentrar() {
+    const volta = voltaLarga();
+    if (trilho.scrollLeft < volta * 0.5) saltar(volta);
+    else if (trilho.scrollLeft > volta * 1.5) saltar(-volta);
+  }
+
+  clonar();
+  // Começa no bloco do meio
+  requestAnimationFrame(() => saltar(voltaLarga()));
+
+  trilho.addEventListener("scroll", () => {
+    // Enquanto o dedo/mouse está arrastando, não recentro: o salto
+    // no meio do gesto faria o card "escapar" da mão.
+    if (!arrastando) recentrar();
+  }, { passive: true });
+
+  window.addEventListener("resize", recentrar);
+
+  /* ---------- Setas ---------- */
+  setas.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const dir = Number(btn.dataset.dir);
+      trilho.scrollBy({ left: dir * trilho.clientWidth * 0.85, behavior: "smooth" });
+    });
+  });
+
+  /* ---------- Arrastar com o cursor ---------- */
+  let arrastando = false;
+  let arrastou = false;   // diferencia um clique de um arrasto
+  let x0 = 0;
+  let scroll0 = 0;
+
+  trilho.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    arrastando = true;
+    arrastou = false;
+    x0 = e.clientX;
+    scroll0 = trilho.scrollLeft;
+    trilho.classList.add("arrastando");
+  });
+
+  trilho.addEventListener("pointermove", (e) => {
+    if (!arrastando) return;
+    const dx = e.clientX - x0;
+
+    // Só vira "arrasto" depois de 4px. Sem essa folga, o tremor
+    // natural da mão ao clicar cancelaria o clique no card.
+    if (Math.abs(dx) > 4) {
+      arrastou = true;
+      trilho.setPointerCapture(e.pointerId);
+    }
+    if (arrastou) trilho.scrollLeft = scroll0 - dx;
+  });
+
+  function soltar() {
+    if (!arrastando) return;
+    arrastando = false;
+    trilho.classList.remove("arrastando");
+    recentrar();
+  }
+
+  trilho.addEventListener("pointerup", soltar);
+  trilho.addEventListener("pointercancel", soltar);
+
+  // Se a pessoa arrastou, o "clique" que o navegador dispara no fim
+  // do gesto não pode abrir o card.
+  trilho.addEventListener("click", (e) => {
+    if (arrastou) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
 })();
 
 /* ---------------- Mural ---------------- */
