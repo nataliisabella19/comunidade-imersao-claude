@@ -19,9 +19,9 @@ function revelar() {
   document.documentElement.dataset.checando = "0";
 }
 
-/* Falhou? Mostra o motivo na tela, com um caminho de saída.
-   Página branca sem explicação é o pior desfecho possível. */
-function falhar(motivo) {
+/* Tela de aviso. Página branca sem explicação é o pior desfecho
+   possível, então TODA saída ruim passa por aqui. */
+function telaAviso(titulo, motivo, rotuloBotao, aoClicar) {
   revelar();
   const caixa = document.createElement("div");
   caixa.setAttribute("role", "alert");
@@ -33,23 +33,29 @@ function falhar(motivo) {
   `;
 
   const t = document.createElement("p");
-  t.style.cssText = "font-size:1.1rem;font-weight:600;";
-  t.textContent = "Não consegui te conectar";
+  t.style.cssText = "font-size:1.15rem;font-weight:600;";
+  t.textContent = titulo;
 
   const m = document.createElement("p");
-  m.style.cssText = "font-size:.85rem;color:#666;max-width:44ch;line-height:1.5;";
+  m.style.cssText = "font-size:.88rem;color:#666;max-width:46ch;line-height:1.6;";
   m.textContent = motivo;
 
-  const a = document.createElement("a");
-  a.href = URL_LOGIN;
-  a.textContent = "Tentar de novo";
-  a.style.cssText = `
-    padding:12px 24px;border-radius:999px;background:#1B5CF5;
-    color:#fff;text-decoration:none;font-size:.9rem;font-weight:500;
+  const b = document.createElement("button");
+  b.textContent = rotuloBotao;
+  b.style.cssText = `
+    padding:12px 26px;border:none;border-radius:999px;background:#1B5CF5;
+    color:#fff;font-size:.9rem;font-weight:500;cursor:pointer;
   `;
+  b.addEventListener("click", aoClicar);
 
-  caixa.append(t, m, a);
+  caixa.append(t, m, b);
   document.body.append(caixa);
+}
+
+function falhar(motivo) {
+  telaAviso("Não consegui te conectar", motivo, "Tentar de novo", () => {
+    window.location.replace(URL_LOGIN);
+  });
 }
 
 try {
@@ -93,6 +99,36 @@ try {
     if (codigo) {
       window.history.replaceState({}, "", window.location.pathname);
     }
+
+    /* ---------- A pessoa é da turma? ----------
+       Ter conta no Google não basta: a comunidade é fechada. Quem
+       responde é o BANCO — esta checagem aqui é só pra dar uma
+       mensagem decente. Mesmo que alguém burlasse este `if`, não
+       veria post nenhum: o RLS recusa a leitura de quem não está
+       na lista. */
+    const { data: daTurma, error: erroLista } = await sb.rpc("eh_aluna");
+
+    if (erroLista) {
+      falhar("Não consegui verificar seu acesso: " + erroLista.message);
+      throw erroLista;
+    }
+
+    if (!daTurma) {
+      const email = sessao.user?.email || "sua conta";
+      telaAviso(
+        "Você ainda não está na turma",
+        `A conta ${email} não está na lista de alunas da comunidade. ` +
+        `Se você faz parte da imersão, avise a organização para liberar ` +
+        `esse e-mail — ou entre com a conta que você usou na inscrição.`,
+        "Sair e tentar outra conta",
+        async () => {
+          await sb.auth.signOut();
+          window.location.replace(URL_LOGIN);
+        }
+      );
+      throw new Error("fora da lista");
+    }
+
     revelar();
   }
 
