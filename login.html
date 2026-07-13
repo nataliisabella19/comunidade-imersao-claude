@@ -15,9 +15,9 @@
 </head>
 <body class="corpo-login">
 
-<!-- Mesmo fundo de partículas do site -->
-<canvas id="bg" class="bg-canvas"></canvas>
-<div class="bg-scrim"></div>
+<!-- Bolha iridescente (WebGL). Se o WebGL faltar, ela some sozinha
+     e fica o degradê do CSS por baixo. -->
+<canvas id="bolha" class="bolha-canvas"></canvas>
 
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
   <symbol id="i-google" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/></symbol>
@@ -46,7 +46,7 @@
   <p class="login-rodape">Feito pela comunidade da Imersão Claude</p>
 </main>
 
-<script src="background.js"></script>
+<script src="bolha.js"></script>
 <script type="module" src="login.js"></script>
 </body>
 </html>

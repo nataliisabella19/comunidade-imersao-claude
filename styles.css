@@ -876,8 +876,31 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 .rodape-nota { margin-top: 5px; font-size: 0.75rem; opacity: 0.75; }
 
 /* ==========================================================
-   PÁGINA DE LOGIN
+   PÁGINA DE LOGIN — bolha iridescente
    ========================================================== */
+
+/* Degradê claro por baixo da bolha. Ele também é a REDE DE
+   SEGURANÇA: se o WebGL não existir no aparelho, o canvas some e
+   sobra este fundo, que ainda fica bonito. A página nunca abre
+   branca. */
+.corpo-login {
+  background: linear-gradient(170deg,
+    #F5EFE8 0%,
+    #EDE8E4 35%,
+    #DDE2EA 75%,
+    #D3DAE6 100%
+  ) fixed;
+}
+
+.bolha-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: block;
+}
+
 .login-palco {
   position: relative;
   z-index: 10;
