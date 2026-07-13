@@ -16,7 +16,24 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 export const SUPABASE_URL  = "https://hlyjhofiotsverogkorg.supabase.co";
 export const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhseWpob2Zpb3RzdmVyb2drb3JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODcwNDgsImV4cCI6MjA5OTQ2MzA0OH0.id4-EmVN64IsbHaCFQUccDRkFi2SYYCH0IH9Pe8IEFc";
 
-export const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+export const sb = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: {
+    flowType: "pkce",
+
+    /* Desligado de propósito. Ligado, a biblioteca tenta trocar o
+       ?code= por sessão sozinha, em paralelo com a troca explícita
+       do guard.js. As duas correm, uma consome o código primeiro, e
+       a outra falha com "código já usado" — um erro fantasma, que só
+       aparece às vezes, dependendo de quem chega antes.
+
+       Com isso desligado existe UM único lugar que faz a troca, e
+       ele sabe reportar o erro. */
+    detectSessionInUrl: false,
+
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});
 
 /* Caminho da pasta do site (ex.: "/comunidade-imersao-claude/").
    Escrever a URL na mão quebraria ao abrir o site local ou ao

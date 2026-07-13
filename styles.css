@@ -34,8 +34,18 @@ html { scroll-behavior: smooth; }
 
 /* A página nasce escondida e só aparece quando o porteiro (guard.js)
    confirma a sessão. Sem isso, quem não tem login veria um lampejo
-   do conteúdo antes de ser redirecionado — feio e confuso. */
-html[data-checando="1"] body { visibility: hidden; }
+   do conteúdo antes de ser redirecionado.
+
+   A animação é a REDE DE SEGURANÇA. Sem ela, qualquer falha no
+   JavaScript (CDN fora do ar, erro no script, bloqueador agressivo)
+   deixaria a página branca PARA SEMPRE, sem mensagem nenhuma — que
+   é exatamente o pior jeito de um site quebrar. Com ela, o conteúdo
+   aparece de qualquer forma depois de 8 segundos. */
+html[data-checando="1"] body {
+  visibility: hidden;
+  animation: revelar-mesmo-com-erro 0s linear 8s forwards;
+}
+@keyframes revelar-mesmo-com-erro { to { visibility: visible; } }
 
 body {
   min-height: 100vh;
