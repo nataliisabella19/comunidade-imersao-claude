@@ -27,8 +27,10 @@
 
     uniform vec2  u_tela;
     uniform float u_tempo;
-    uniform vec2  u_mouse;    // -1 .. 1
+    uniform vec2  u_mouse;    // cursor suavizado, -1 .. 1
     uniform float u_centro;   // deslocamento horizontal do blob
+    uniform vec2  u_ponto;    // cursor no mesmo espaço da cena
+    uniform float u_perto;    // 0 = cursor longe; 1 = em cima do blob
 
     /* ---------- Ruído ---------- */
     vec3 hash3(vec3 p) {
@@ -59,12 +61,39 @@
       return v;
     }
 
-    /* Esfera amassada. As dobras vêm daqui: onde o ruído afunda a
-       superfície, nasce um vinco — e é o vinco que dá a leitura de
-       "líquido", em vez de bola de borracha. */
+    /* ---------- Onde o cursor toca a superfície ----------
+       Calculado UMA vez em main() e guardado aqui, porque mapa()
+       roda dezenas de vezes por pixel no raymarch. */
+    vec3  g_toque;    // ponto tocado, na superfície
+    float g_forca;    // 0 = cursor fora do blob; 1 = bem no meio
+
+    /* A esfera. Em repouso ela é quase lisa — só uma ondulação de
+       fundo, bem de leve, pra não parecer plástico morto.
+
+       A deformação de verdade é LOCAL, e só existe onde o cursor
+       está: um afundamento sob o dedo e uma crista em volta, como
+       quando se encosta na superfície de uma gota. */
     float mapa(vec3 p) {
       float d = length(p) - 1.0;
-      d -= fbm(p * 1.15 + vec3(0.0, 0.0, u_tempo * 0.16)) * 0.30;
+
+      // Ondulação de repouso: quase nada.
+      d -= fbm(p * 1.3 + vec3(0.0, 0.0, u_tempo * 0.10)) * 0.045;
+
+      if (g_forca > 0.001) {
+        float dist = distance(p, g_toque);
+
+        // Afunda embaixo do cursor…
+        float cova = exp(-dist * dist * 7.0);
+        // …e levanta uma crista logo em volta, como água deslocada.
+        float crista = exp(-pow(dist - 0.62, 2.0) * 9.0);
+
+        d += g_forca * (cova * 0.30 - crista * 0.13);
+
+        // Ondas concêntricas correndo pra fora do toque.
+        d += g_forca * 0.022 * sin(dist * 16.0 - u_tempo * 4.5)
+             * exp(-dist * 1.6);
+      }
+
       return d;
     }
 
@@ -93,13 +122,20 @@
       vec2 uv = (gl_FragCoord.xy - 0.5 * u_tela) / min(u_tela.x, u_tela.y);
       uv.x -= u_centro;               // empurra o blob pro lado
 
+      /* Blob MENOR: afasto a câmera. Multiplicar o uv também
+         encolheria, mas achataria a perspectiva junto. */
+      uv *= 1.75;
+
       vec3 corFundo = vec3(1.0);      // branco, como na referência
 
       vec3 ro = vec3(0.0, 0.0, 3.1);
       vec3 rd = normalize(vec3(uv, -1.7));
 
-      float ax = u_mouse.y * 0.5;
-      float ay = u_mouse.x * 0.7 + u_tempo * 0.09;
+      /* Sem giro automático: em repouso o blob fica parado, como uma
+         gota pousada. Só uma inclinação bem sutil acompanha o
+         cursor — o movimento de verdade é a deformação local. */
+      float ax = u_mouse.y * 0.16;
+      float ay = u_mouse.x * 0.20;
 
       mat3 rotY = mat3(cos(ay), 0.0, -sin(ay),
                        0.0,     1.0,  0.0,
@@ -111,6 +147,29 @@
 
       vec3 roR = rot * ro;
       vec3 rdR = rot * rd;
+
+      /* ---------- O cursor toca o blob? ----------
+         Disparo um raio a partir do cursor e vejo se ele cruza a
+         esfera. Se NÃO cruza, o cursor está fora do blob e nada se
+         deforma — é exatamente a regra que você pediu, e ela cai
+         de graça da própria geometria. */
+      vec3 roM = rot * ro;
+      vec3 rdM = rot * normalize(vec3(u_ponto * 1.75, -1.7));
+
+      float b = dot(roM, rdM);
+      float c = dot(roM, roM) - 1.0;
+      float h = b * b - c;
+
+      if (h > 0.0) {
+        float tm = -b - sqrt(h);          // face da frente
+        g_toque = roM + rdM * tm;
+        // Suaviza na borda: perto da silhueta o toque é fraco, e a
+        // deformação não "liga" de um frame pro outro com um estalo.
+        g_forca = u_perto * smoothstep(0.0, 0.16, h);
+      } else {
+        g_toque = vec3(99.0);
+        g_forca = 0.0;
+      }
 
       float t = 0.0;
       bool bateu = false;
@@ -212,6 +271,8 @@
   const uTempo  = gl.getUniformLocation(prog, "u_tempo");
   const uMouse  = gl.getUniformLocation(prog, "u_mouse");
   const uCentro = gl.getUniformLocation(prog, "u_centro");
+  const uPonto  = gl.getUniformLocation(prog, "u_ponto");
+  const uPerto  = gl.getUniformLocation(prog, "u_perto");
 
   /* DPR limitado a 1.5: o shader raymarcha por pixel, e numa tela
      retina inteira isso quadruplicaria o custo sem ganho visível. */
@@ -235,25 +296,55 @@
 
   const reduzir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  let alvoX = 0, alvoY = 0, mx = 0, my = 0;
+  let alvoX = 0, alvoY = 0;   // cursor cru, no espaço da cena
+  let mx = 0, my = 0;         // cursor suavizado (inclinação)
+  let px = 9, py = 9;         // ponto de toque (começa longe do blob)
+  let alvoPerto = 0, perto = 0;
+
+  /* Converte o cursor pro MESMO espaço que o shader usa. Sem essa
+     conversão o toque cairia no lugar errado — o blob deformaria
+     num ponto diferente de onde está o mouse. */
+  function paraCena(clientX, clientY) {
+    const menor = Math.min(window.innerWidth, window.innerHeight);
+    const x = (clientX - window.innerWidth / 2) / menor;
+    const y = -(clientY - window.innerHeight / 2) / menor;
+    const centro = window.innerWidth < 900 ? 0 : 0.30;
+    return [x - centro, y];
+  }
 
   if (!reduzir) {
     window.addEventListener("pointermove", (e) => {
+      const [x, y] = paraCena(e.clientX, e.clientY);
+      px = x;
+      py = y;
+      alvoPerto = 1;
+
       alvoX = (e.clientX / window.innerWidth) * 2 - 1;
       alvoY = -((e.clientY / window.innerHeight) * 2 - 1);
     }, { passive: true });
+
+    // Cursor saiu da janela: a gota volta ao repouso, não fica
+    // congelada com um dedo invisível afundando nela.
+    window.addEventListener("pointerleave", () => { alvoPerto = 0; }, { passive: true });
   }
 
   const inicio = performance.now();
 
   function quadro(agora) {
     // Inércia: o blob é massa, não um espelho grudado no cursor.
-    mx += (alvoX - mx) * 0.045;
-    my += (alvoY - my) * 0.045;
+    mx += (alvoX - mx) * 0.05;
+    my += (alvoY - my) * 0.05;
+
+    /* A força do toque sobe e desce devagar. É o que faz a
+       deformação nascer e relaxar como água, em vez de aparecer e
+       sumir num piscar. */
+    perto += (alvoPerto - perto) * 0.09;
 
     redimensionar();
     gl.uniform1f(uTempo, reduzir ? 0.0 : (agora - inicio) / 1000);
     gl.uniform2f(uMouse, mx, my);
+    gl.uniform2f(uPonto, px, py);
+    gl.uniform1f(uPerto, reduzir ? 0.0 : perto);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     requestAnimationFrame(quadro);

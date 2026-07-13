@@ -23,5 +23,13 @@ export const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
    trocar pro domínio próprio. */
 const base = window.location.pathname.replace(/[^/]*$/, "");
 
-export const URL_ENTRADA = window.location.origin + base + "index.html";
+/* A entrada aponta pra PASTA, não pra "index.html".
+
+   Isso é obrigatório: o Supabase só aceita devolver o aluno numa URL
+   que bata EXATAMENTE com a lista de Redirect URLs do painel — e lá
+   está cadastrado ".../comunidade-imersao-claude/", com barra no fim.
+   Pedir ".../index.html" não bate, o Supabase recusa e cai num plano
+   B silencioso. O servidor entrega o mesmo index.html nos dois casos,
+   então não se perde nada. */
+export const URL_ENTRADA = window.location.origin + base;
 export const URL_LOGIN   = window.location.origin + base + "login.html";
