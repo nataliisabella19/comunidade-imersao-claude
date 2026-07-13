@@ -876,21 +876,13 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 .rodape-nota { margin-top: 5px; font-size: 0.75rem; opacity: 0.75; }
 
 /* ==========================================================
-   PÁGINA DE LOGIN — bolha iridescente
+   PÁGINA DE LOGIN — blob azul sobre branco
    ========================================================== */
 
-/* Degradê claro por baixo da bolha. Ele também é a REDE DE
-   SEGURANÇA: se o WebGL não existir no aparelho, o canvas some e
-   sobra este fundo, que ainda fica bonito. A página nunca abre
-   branca. */
-.corpo-login {
-  background: linear-gradient(170deg,
-    #F5EFE8 0%,
-    #EDE8E4 35%,
-    #DDE2EA 75%,
-    #D3DAE6 100%
-  ) fixed;
-}
+/* Branco puro por baixo do canvas. É também a REDE DE SEGURANÇA:
+   sem WebGL o canvas some, e a página continua sendo uma landing
+   branca e limpa em vez de uma tela quebrada. */
+.corpo-login { background: #fff; }
 
 .bolha-canvas {
   position: fixed;
@@ -901,64 +893,110 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
   display: block;
 }
 
+/* O texto ocupa a metade esquerda; o blob (desenhado no canvas)
+   vive na direita. Não uso grid de duas colunas porque a direita
+   não é um elemento — é pixel pintado pelo shader. */
 .login-palco {
   position: relative;
   z-index: 10;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 28px;
-  padding: 2rem;
+  padding: 3rem clamp(1.5rem, 7vw, 7rem);
+  pointer-events: none;   /* o cursor atravessa e chega no blob */
 }
 
-.login-cartao {
-  width: 100%;
-  max-width: 420px;
-  padding: 48px 40px 40px;
-  border-radius: 2.25rem;
-  text-align: center;
+.login-texto {
+  max-width: 460px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 18px;
+  align-items: flex-start;
+  gap: 22px;
 }
 
-.login-logo { opacity: 0.9; }
-
-.login-cartao h1 {
-  font-size: 2rem;
+.login-marca {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 1.05rem;
   font-weight: 600;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
+  color: var(--grafite);
+  pointer-events: auto;
+}
+
+.login-texto h1 {
+  font-size: clamp(2.4rem, 4.6vw, 3.6rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.06;
   color: var(--grafite);
 }
+.login-texto h1 em { color: rgba(27, 26, 24, 0.55); }
 
 .login-sub {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--texto-60);
-  max-width: 30ch;
-  line-height: 1.55;
+  line-height: 1.6;
+  max-width: 38ch;
 }
 
 .login-botao {
-  margin-top: 10px;
-  padding: 14px 26px;
-  font-size: 0.92rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 13px 13px 13px 24px;
+  border-radius: 999px;
+  background: #1B5CF5;              /* o azul do blob */
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 10px 26px -8px rgba(27, 92, 245, 0.55);
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.login-botao:hover {
+  transform: translateY(-2px);
+  background: #1550E0;
+  box-shadow: 0 16px 32px -10px rgba(27, 92, 245, 0.6);
+}
+.login-botao:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+.login-seta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .login-recado {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--texto-50);
   line-height: 1.5;
-  max-width: 34ch;
+  max-width: 36ch;
   transition: color 0.2s;
 }
 .login-recado[data-erro="1"] { color: #C0341A; font-weight: 500; }
 
-.login-rodape {
-  font-size: 0.78rem;
-  color: var(--texto-50);
+/* Tela estreita: o blob vai pro centro (ver bolha.js) e o texto
+   desce, com um véu branco pra não competir com ele. */
+@media (max-width: 900px) {
+  .login-palco {
+    align-items: flex-end;
+    padding-bottom: 3.5rem;
+  }
+  .login-texto {
+    background: rgba(255, 255, 255, 0.82);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    padding: 26px;
+    border-radius: 1.75rem;
+  }
 }
 
 /* ==========================================================

@@ -15,8 +15,8 @@
 </head>
 <body class="corpo-login">
 
-<!-- Bolha iridescente (WebGL). Se o WebGL faltar, ela some sozinha
-     e fica o degradê do CSS por baixo. -->
+<!-- Blob azul (WebGL). Sem WebGL, o canvas some sozinho e fica
+     só o branco do CSS — a porta de entrada nunca abre quebrada. -->
 <canvas id="bolha" class="bolha-canvas"></canvas>
 
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
@@ -25,25 +25,32 @@
 </svg>
 
 <main class="login-palco">
-  <div class="login-cartao liquid-glass-strong">
-    <img class="login-logo" src="logo-escuro.svg" alt="" width="56" height="56">
+  <div class="login-texto">
+    <a class="login-marca" href="#">
+      <img src="logo-escuro.svg" alt="" width="26" height="26">
+      <span>imersão claude</span>
+    </a>
 
-    <h1>imersão claude</h1>
+    <h1>
+      Construindo<br>
+      <em>de verdade</em> com IA
+    </h1>
+
     <p class="login-sub">
-      A comunidade de quem está construindo <em>de verdade</em> com o Claude.
+      A comunidade de quem saiu do "tirar dúvida com IA" e foi pro
+      "entregar projeto com IA". Entre para ver o mural da turma.
     </p>
 
-    <button class="pill btn-conta login-botao" id="btn-entrar" type="button">
+    <button class="login-botao" id="btn-entrar" type="button">
       <svg class="ic ic-sm"><use href="#i-google"/></svg>
       <span>Entrar com Google</span>
+      <span class="login-seta"><svg class="ic ic-sm"><use href="#i-arrow-right"/></svg></span>
     </button>
 
     <p class="login-recado" id="login-recado" data-erro="0">
-      Use a conta que você quiser — ela só serve pra identificar seus posts no mural.
+      Sua conta serve só para identificar seus posts no mural.
     </p>
   </div>
-
-  <p class="login-rodape">Feito pela comunidade da Imersão Claude</p>
 </main>
 
 <script src="bolha.js"></script>
