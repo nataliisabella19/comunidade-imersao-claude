@@ -26,6 +26,12 @@ let usuario = null;
 let tag = "";
 let curtidasMinhas = new Set();
 
+/* Quais conversas estão abertas na tela.
+   O feed é remontado do zero a cada mudança (post novo, curtida,
+   login). Sem esta memória, a conversa que a aluna acabou de abrir
+   se fecharia sozinha na cara dela quando outra pessoa postasse. */
+const conversasAbertas = new Set();
+
 /* ================= Utilidades ================= */
 
 function iniciais(nome) {
@@ -97,6 +103,7 @@ function criarPost(p) {
   const art = document.createElement("article");
   art.className = "post liquid-glass";
   art.dataset.id = p.id;
+  art.dataset.autor = p.autor_id;   // usado pra saber quem pode moderar a conversa
 
   const av = document.createElement("span");
   av.className = "avatar";
@@ -152,6 +159,10 @@ function criarPost(p) {
   if (curtidasMinhas.has(p.id)) curtir.dataset.curtido = "1";
   acoes.append(curtir);
 
+  const nComentarios = p.comentarios?.[0]?.count ?? 0;
+  const comentar = botaoAcao("acao js-comentar", "i-balao", "Comentar", String(nComentarios));
+  acoes.append(comentar);
+
   /* Editar/excluir só aparecem pro dono. Isso é conveniência de
      interface — quem REALMENTE impede é o RLS no banco. Esconder
      um botão não protege nada por si só. */
@@ -166,15 +177,157 @@ function criarPost(p) {
   }
 
   corpo.append(acoes);
+
+  /* A conversa nasce fechada e vazia. Só busco os comentários quando
+     alguém abre — carregar todos de todos os posts de uma vez seria
+     puxar um monte de texto que ninguém pediu pra ver. */
+  const conversa = document.createElement("div");
+  conversa.className = "post-conversa";
+  conversa.hidden = true;
+  corpo.append(conversa);
+
   art.append(av, corpo);
   return art;
+}
+
+/* ================= Comentários ================= */
+
+function criarComentario(c, donoDoPost) {
+  const item = document.createElement("div");
+  item.className = "resposta";
+  item.dataset.id = c.id;
+
+  const av = document.createElement("span");
+  av.className = "avatar avatar-mini";
+  av.textContent = iniciais(c.autor_nome);
+
+  const corpo = document.createElement("div");
+  corpo.className = "resposta-corpo";
+
+  const topo = document.createElement("div");
+  topo.className = "resposta-topo";
+
+  const nome = document.createElement("strong");
+  nome.textContent = c.autor_nome;
+
+  const hora = document.createElement("span");
+  hora.className = "post-hora";
+  hora.textContent = tempoRelativo(c.criado_em);
+
+  topo.append(nome, hora);
+
+  const texto = document.createElement("p");
+  texto.className = "resposta-texto";
+  texto.textContent = c.texto;
+
+  corpo.append(topo, texto);
+  item.append(av, corpo);
+
+  /* Some a própria resposta; e quem publicou o post pode apagar
+     qualquer resposta nele — é o mínimo de moderação. Igual aos
+     posts: o botão é conveniência, quem recusa de verdade é o RLS. */
+  const podeApagar =
+    usuario && (c.autor_id === usuario.id || donoDoPost === usuario.id);
+
+  if (podeApagar) {
+    item.append(
+      botaoAcao("acao acao-perigo js-excluir-resposta", "i-lixeira", "Excluir comentário")
+    );
+  }
+
+  return item;
+}
+
+function criarCompositorResposta() {
+  const caixa = document.createElement("div");
+  caixa.className = "resposta-nova";
+
+  const av = document.createElement("span");
+  av.className = "avatar avatar-mini";
+  const meuNome = usuario?.user_metadata?.full_name || usuario?.email || "";
+  av.textContent = iniciais(meuNome);
+
+  const campo = document.createElement("input");
+  campo.className = "resposta-campo";
+  campo.type = "text";
+  campo.maxLength = 600;
+  campo.placeholder = "Responder…";
+
+  const enviar = botaoAcao("acao js-enviar-resposta", "i-arrow-up", "Enviar comentário");
+
+  caixa.append(av, campo, enviar);
+  return caixa;
+}
+
+async function abrirConversa(art) {
+  const conversa = art.querySelector(".post-conversa");
+  if (!conversa) return;
+
+  conversa.hidden = false;
+  conversasAbertas.add(art.dataset.id);
+
+  const { data, error } = await sb
+    .from("comentarios")
+    .select("id, post_id, autor_id, autor_nome, texto, criado_em")
+    .eq("post_id", art.dataset.id)
+    .order("criado_em", { ascending: true });
+
+  if (error) {
+    mostrarErro("Não consegui carregar os comentários: " + error.message);
+    return;
+  }
+
+  const lista = document.createElement("div");
+  lista.className = "respostas-lista";
+  data.forEach((c) => lista.append(criarComentario(c, art.dataset.autor)));
+
+  conversa.replaceChildren(lista, criarCompositorResposta());
+  sincronizarContador(art, data.length);
+}
+
+function fecharConversa(art) {
+  const conversa = art.querySelector(".post-conversa");
+  if (!conversa) return;
+  conversa.hidden = true;
+  conversa.replaceChildren();
+  conversasAbertas.delete(art.dataset.id);
+}
+
+function sincronizarContador(art, n) {
+  const btn = art.querySelector(".js-comentar span");
+  if (btn) btn.textContent = String(n);
+}
+
+async function responder(art, campo) {
+  const texto = campo.value.trim();
+  if (!usuario || !texto) return;
+
+  campo.disabled = true;
+
+  const { error } = await sb.from("comentarios").insert({
+    post_id: art.dataset.id,
+    autor_id: usuario.id,
+    autor_nome: usuario.user_metadata?.full_name || usuario.email || "Aluno",
+    texto,
+  });
+
+  campo.disabled = false;
+
+  if (error) {
+    mostrarErro("Não consegui comentar: " + error.message);
+    return;
+  }
+
+  campo.value = "";
+  await abrirConversa(art);   // recarrega a conversa já com a resposta nova
+  art.querySelector(".resposta-campo")?.focus();
 }
 
 /* ================= Carregar o feed ================= */
 async function carregarFeed() {
   const { data, error } = await sb
     .from("posts")
-    .select("id, autor_id, autor_nome, texto, tag, link, editado, criado_em, curtidas(count)")
+    .select("id, autor_id, autor_nome, texto, tag, link, editado, criado_em, curtidas(count), comentarios(count)")
     .order("criado_em", { ascending: false })
     .limit(50);
 
@@ -204,6 +357,15 @@ async function carregarFeed() {
   }
 
   data.forEach((p) => feed.append(criarPost(p)));
+
+  /* Reabre as conversas que a pessoa tinha aberto antes desta
+     remontagem. Sem isto, um post novo de outra aluna fecharia a
+     discussão que ela estava lendo. */
+  conversasAbertas.forEach((id) => {
+    const art = feed.querySelector(`.post[data-id="${CSS.escape(id)}"]`);
+    if (art) abrirConversa(art);
+    else conversasAbertas.delete(id);   // o post sumiu (excluído)
+  });
 }
 
 /* ================= Publicar ================= */
@@ -345,6 +507,39 @@ feed.addEventListener("click", async (e) => {
   const curtir = e.target.closest(".js-curtir");
   if (curtir) { alternarCurtida(curtir, art.dataset.id); return; }
 
+  if (e.target.closest(".js-comentar")) {
+    const conversa = art.querySelector(".post-conversa");
+    if (conversa?.hidden) {
+      await abrirConversa(art);
+      art.querySelector(".resposta-campo")?.focus();
+    } else {
+      fecharConversa(art);
+    }
+    return;
+  }
+
+  const enviar = e.target.closest(".js-enviar-resposta");
+  if (enviar) {
+    const campo = art.querySelector(".resposta-campo");
+    if (campo) await responder(art, campo);
+    return;
+  }
+
+  const apagarResposta = e.target.closest(".js-excluir-resposta");
+  if (apagarResposta) {
+    const item = apagarResposta.closest(".resposta");
+    if (!item || !confirm("Excluir este comentário?")) return;
+
+    const { error } = await sb.from("comentarios").delete().eq("id", item.dataset.id);
+    if (error) {
+      mostrarErro("Não consegui excluir o comentário: " + error.message);
+    } else {
+      item.remove();
+      sincronizarContador(art, art.querySelectorAll(".resposta").length);
+    }
+    return;
+  }
+
   if (e.target.closest(".js-editar"))   { abrirEdicao(art); return; }
   if (e.target.closest(".js-salvar"))   { fecharEdicao(art, true); return; }
   if (e.target.closest(".js-cancelar")) { fecharEdicao(art, false); return; }
@@ -355,6 +550,16 @@ feed.addEventListener("click", async (e) => {
     if (error) mostrarErro("Não consegui excluir: " + error.message);
     else art.remove();
   }
+});
+
+/* Enter envia o comentário. Delegado no feed, como o clique: os
+   campos de resposta nascem e morrem o tempo todo, então ligar o
+   ouvinte em cada um deixaria os novos mudos. */
+feed.addEventListener("keydown", async (e) => {
+  if (e.key !== "Enter" || !e.target.classList.contains("resposta-campo")) return;
+  e.preventDefault();
+  const art = e.target.closest(".post");
+  if (art) await responder(art, e.target);
 });
 
 /* ================= Sair ================= */
@@ -437,4 +642,30 @@ sb.auth.onAuthStateChange((_evento, sessao) => {
    ninguém precisar recarregar a página. */
 sb.channel("mural")
   .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, carregarFeed)
+
+  /* Comentário novo NÃO remonta o feed inteiro: se remontasse, o
+     campo de resposta perderia o foco e o texto meio-digitado da
+     aluna sumiria no meio da frase. Aqui eu mexo só no post afetado. */
+  .on("postgres_changes", { event: "*", schema: "public", table: "comentarios" }, (payload) => {
+    const postId = payload.new?.post_id || payload.old?.post_id;
+    if (!postId) return;
+
+    const art = feed.querySelector(`.post[data-id="${CSS.escape(postId)}"]`);
+    if (!art) return;
+
+    const conversa = art.querySelector(".post-conversa");
+    if (conversa && !conversa.hidden) {
+      // Conversa aberta: já estou vendo, então atualizo a lista.
+      // (Se fui EU que comentei, `responder()` já recarregou — recarregar
+      //  de novo é barato e mantém todo mundo vendo a mesma coisa.)
+      abrirConversa(art);
+    } else {
+      // Fechada: basta o número no botão subir/descer.
+      const btn = art.querySelector(".js-comentar span");
+      if (btn) {
+        const n = Number(btn.textContent || 0);
+        btn.textContent = String(Math.max(0, n + (payload.eventType === "DELETE" ? -1 : 1)));
+      }
+    }
+  })
   .subscribe();
