@@ -20,8 +20,17 @@
 <canvas id="bolha" class="bolha-canvas"></canvas>
 
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
-  <symbol id="i-google" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/></symbol>
+  <!-- O "G" oficial, nas 4 cores. O ícone anterior era um desenho
+       inventado: além de destoar, um botão de login com a marca errada
+       gera desconfiança logo na porta de entrada. -->
+  <symbol id="i-google" viewBox="0 0 48 48">
+    <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5.1-4.4 6.6v5.5h7.1c4.2-3.8 6.6-9.5 6.6-16.1z"/>
+    <path fill="#34A853" d="M24 46c6 0 11-2 14.6-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.5 2.1-5.8 0-10.7-3.9-12.5-9.1H4.2v5.7C7.8 41.1 15.3 46 24 46z"/>
+    <path fill="#FBBC05" d="M11.5 28.1c-.5-1.3-.7-2.7-.7-4.1s.3-2.8.7-4.1v-5.7H4.2C2.8 17.1 2 20.4 2 24s.8 6.9 2.2 9.8l7.3-5.7z"/>
+    <path fill="#EA4335" d="M24 10.4c3.3 0 6.2 1.1 8.5 3.3l6.3-6.3C35 3.9 30 2 24 2 15.3 2 7.8 6.9 4.2 14.2l7.3 5.7c1.8-5.2 6.7-9.5 12.5-9.5z"/>
+  </symbol>
   <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  <symbol id="i-cadeado" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
 </svg>
 
 <main class="login-palco">
@@ -42,10 +51,15 @@
     </p>
 
     <button class="login-botao" id="btn-entrar" type="button">
-      <svg class="ic ic-sm"><use href="#i-google"/></svg>
+      <svg class="ic-google"><use href="#i-google"/></svg>
       <span>Entrar com Google</span>
       <span class="login-seta"><svg class="ic ic-sm"><use href="#i-arrow-right"/></svg></span>
     </button>
+
+    <p class="login-fechada">
+      <svg class="ic ic-sm"><use href="#i-cadeado"/></svg>
+      <span>Turma fechada — entre com o e-mail da sua inscrição.</span>
+    </p>
 
     <p class="login-recado" id="login-recado" data-erro="0">
       Sua conta serve só para identificar seus posts no mural.

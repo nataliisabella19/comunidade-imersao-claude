@@ -993,6 +993,28 @@ button.pill:hover, a.pill:hover { transform: scale(1.05); }
 }
 .login-recado[data-erro="1"] { color: #C0341A; font-weight: 500; }
 
+/* O "G" do Google já vem pintado nas 4 cores dentro do próprio SVG.
+   Ele NÃO usa a classe `.ic`: aquela regra manda fill:none e
+   stroke:currentColor, o que apagaria o desenho. Aqui só o tamanho. */
+.ic-google {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+/* Aviso de turma fechada. Fica ANTES do recado de erro de propósito:
+   a aluna precisa saber que o acesso é restrito antes de clicar, não
+   depois de levar um "você não está na lista" na cara. */
+.login-fechada {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 0.78rem;
+  color: var(--texto-60);
+}
+.login-fechada .ic { stroke-width: 1.8; opacity: 0.7; }
+
 /* Tela estreita: o blob vai pro centro (ver bolha.js) e o texto
    desce, com um véu branco pra não competir com ele. */
 @media (max-width: 900px) {

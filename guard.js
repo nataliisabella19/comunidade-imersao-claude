@@ -129,6 +129,14 @@ try {
       throw new Error("fora da lista");
     }
 
+    /* Carimba a presença: quem entrou, quando, quantas vezes.
+       De propósito SEM await e com o erro engolido — isto é registro
+       interno, seu. Se falhar, a aluna não pode ser impedida de entrar
+       por causa disso. A porta abre; o caderninho que fica em branco. */
+    sb.rpc("registrar_acesso").then(({ error }) => {
+      if (error) console.warn("[presença] não registrei o acesso:", error.message);
+    });
+
     revelar();
   }
 
